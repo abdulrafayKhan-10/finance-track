@@ -2,18 +2,18 @@
 
 ## 2.1 Stack
 
-| Layer | Choice | Why |
-|-------|--------|-----|
-| Framework | Next.js (App Router, current stable 16.x), React, strict TypeScript | Server components and server actions keep database access and authorization on the server. |
-| Styling/UI | Tailwind CSS v4, shadcn/ui (Radix primitives), lucide icons | Accessible primitives whose code lives in the repo, with no runtime UI vendor. |
-| Charts | Recharts | Responsive, works with React, enough for line, bar, pie and stacked charts. |
-| Forms | React Hook Form + Zod | One Zod schema validates on both client and server. |
-| Money maths | `decimal.js` | Arbitrary-precision decimals. JavaScript `number` is never used for money. |
-| Dates | `date-fns` + `@date-fns/tz` | Calendar-date arithmetic in Asia/Karachi without moment-style mutation bugs. |
-| CSV | `papaparse` | Streaming parser that handles quoting and BOMs (Excel exports). |
-| Database/Auth | Supabase (PostgreSQL 15+/17, Auth, PostgREST) via `@supabase/ssr` | Free tier, RLS, SQL migrations and cookie-based sessions. |
-| Tests | Vitest, React Testing Library, Playwright | Covers unit, component and end-to-end tests. |
-| Hosting | Vercel Hobby (frontend), Supabase Free (DB + Auth), GitHub | All free at personal scale. Limits are in §2.8. |
+| Layer         | Choice                                                              | Why                                                                                        |
+| ------------- | ------------------------------------------------------------------- | ------------------------------------------------------------------------------------------ |
+| Framework     | Next.js (App Router, current stable 16.x), React, strict TypeScript | Server components and server actions keep database access and authorization on the server. |
+| Styling/UI    | Tailwind CSS v4, shadcn/ui (Radix primitives), lucide icons         | Accessible primitives whose code lives in the repo, with no runtime UI vendor.             |
+| Charts        | Recharts                                                            | Responsive, works with React, enough for line, bar, pie and stacked charts.                |
+| Forms         | React Hook Form + Zod                                               | One Zod schema validates on both client and server.                                        |
+| Money maths   | `decimal.js`                                                        | Arbitrary-precision decimals. JavaScript `number` is never used for money.                 |
+| Dates         | `date-fns` + `@date-fns/tz`                                         | Calendar-date arithmetic in Asia/Karachi without moment-style mutation bugs.               |
+| CSV           | `papaparse`                                                         | Streaming parser that handles quoting and BOMs (Excel exports).                            |
+| Database/Auth | Supabase (PostgreSQL 15+/17, Auth, PostgREST) via `@supabase/ssr`   | Free tier, RLS, SQL migrations and cookie-based sessions.                                  |
+| Tests         | Vitest, React Testing Library, Playwright                           | Covers unit, component and end-to-end tests.                                               |
+| Hosting       | Vercel Hobby (frontend), Supabase Free (DB + Auth), GitHub          | All free at personal scale. Limits are in §2.8.                                            |
 
 The aim is a small dependency set. Each new runtime dependency needs a reason recorded in the PR description.
 
@@ -96,35 +96,35 @@ Every device reads and writes the same Postgres database. There is no local data
 
 ## 2.6 Route and component map
 
-| Route | Purpose | Main components |
-|-------|---------|-----------------|
-| `/login` | Email and password sign-in, then TOTP challenge if enrolled | `LoginForm`, `MfaChallenge` |
-| `/` | Dashboard with period selector | `PeriodPicker`, `NetWorthCard`, `CashFlowCards`, `SavingsRateCard`, `PortfolioCard`, `SpendingByCategoryChart`, `AccountBalancesList`, `BudgetProgressList`, `GoalProgressList`, `NetWorthTrendChart`, `RecentTransactions` |
-| `/transactions` | Ledger list | `TransactionFilters`, `TransactionTable` (desktop), `TransactionCards` (mobile), `Pagination`, `ExportCsvButton` |
-| `/transactions/new`, `/[id]` | Create or edit | `TransactionForm` (switches by kind: income, expense, refund, transfer, adjustment), `DeleteConfirmDialog`, `AuditTrail` |
-| `/transactions/import` | CSV import wizard | `CsvUpload`, `ColumnMapper`, `ImportPreview` (row errors and duplicate flags), `ImportCommit` |
-| `/accounts`, `/[id]` | Accounts grouped by assets and liabilities; account ledger | `AccountForm`, `AccountGroupList`, `AccountLedger`, `BalanceHistoryChart` |
-| `/accounts/[id]/reconcile` | Reconciliation | `ReconcileForm`, `ClearedToggleTable`, `ReconciliationHistory` |
-| `/budgets` | Budgets for a month | `MonthPicker`, `BudgetTable`, `BudgetForm`, `CopyPreviousMonth`, `BudgetHistoryChart` |
-| `/goals`, `/[id]` | Goals | `GoalForm`, `GoalCard`, `AllocationForm`, `AllocationHistory` |
-| `/investments` | Portfolio | `HoldingsTable`, `AllocationChart`, `PortfolioHistoryChart`, `GainsSummary`, `IncomeSummary` |
-| `/investments/assets/[id]` | One asset | `AssetForm`, `ValuationForm`, `ValuationHistory`, `PositionByAccount`, `AssetTransactions` |
-| `/investments/new` | Investment transaction | `InvestmentTransactionForm` (buy, sell, dividend, interest, fee, split, opening holding) |
-| `/net-worth` | Net worth detail and snapshots | `NetWorthBreakdown`, `SnapshotList`, `CreateSnapshotButton`, `UnvaluedWarning` |
-| `/reports` | Monthly and yearly reports | `ReportTabs`, `IncomeExpenseReport`, `CategoryReport`, `BudgetPerformance`, `InvestmentReport` |
-| `/settings/*` | Settings | `ProfileForm`, `CategoryManager`, `ExchangeRateTable`, `MfaEnrol`, `DataExport`, `BackupRestore`, `DeleteAccount` |
+| Route                        | Purpose                                                     | Main components                                                                                                                                                                                                             |
+| ---------------------------- | ----------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `/login`                     | Email and password sign-in, then TOTP challenge if enrolled | `LoginForm`, `MfaChallenge`                                                                                                                                                                                                 |
+| `/`                          | Dashboard with period selector                              | `PeriodPicker`, `NetWorthCard`, `CashFlowCards`, `SavingsRateCard`, `PortfolioCard`, `SpendingByCategoryChart`, `AccountBalancesList`, `BudgetProgressList`, `GoalProgressList`, `NetWorthTrendChart`, `RecentTransactions` |
+| `/transactions`              | Ledger list                                                 | `TransactionFilters`, `TransactionTable` (desktop), `TransactionCards` (mobile), `Pagination`, `ExportCsvButton`                                                                                                            |
+| `/transactions/new`, `/[id]` | Create or edit                                              | `TransactionForm` (switches by kind: income, expense, refund, transfer, adjustment), `DeleteConfirmDialog`, `AuditTrail`                                                                                                    |
+| `/transactions/import`       | CSV import wizard                                           | `CsvUpload`, `ColumnMapper`, `ImportPreview` (row errors and duplicate flags), `ImportCommit`                                                                                                                               |
+| `/accounts`, `/[id]`         | Accounts grouped by assets and liabilities; account ledger  | `AccountForm`, `AccountGroupList`, `AccountLedger`, `BalanceHistoryChart`                                                                                                                                                   |
+| `/accounts/[id]/reconcile`   | Reconciliation                                              | `ReconcileForm`, `ClearedToggleTable`, `ReconciliationHistory`                                                                                                                                                              |
+| `/budgets`                   | Budgets for a month                                         | `MonthPicker`, `BudgetTable`, `BudgetForm`, `CopyPreviousMonth`, `BudgetHistoryChart`                                                                                                                                       |
+| `/goals`, `/[id]`            | Goals                                                       | `GoalForm`, `GoalCard`, `AllocationForm`, `AllocationHistory`                                                                                                                                                               |
+| `/investments`               | Portfolio                                                   | `HoldingsTable`, `AllocationChart`, `PortfolioHistoryChart`, `GainsSummary`, `IncomeSummary`                                                                                                                                |
+| `/investments/assets/[id]`   | One asset                                                   | `AssetForm`, `ValuationForm`, `ValuationHistory`, `PositionByAccount`, `AssetTransactions`                                                                                                                                  |
+| `/investments/new`           | Investment transaction                                      | `InvestmentTransactionForm` (buy, sell, dividend, interest, fee, split, opening holding)                                                                                                                                    |
+| `/net-worth`                 | Net worth detail and snapshots                              | `NetWorthBreakdown`, `SnapshotList`, `CreateSnapshotButton`, `UnvaluedWarning`                                                                                                                                              |
+| `/reports`                   | Monthly and yearly reports                                  | `ReportTabs`, `IncomeExpenseReport`, `CategoryReport`, `BudgetPerformance`, `InvestmentReport`                                                                                                                              |
+| `/settings/*`                | Settings                                                    | `ProfileForm`, `CategoryManager`, `ExchangeRateTable`, `MfaEnrol`, `DataExport`, `BackupRestore`, `DeleteAccount`                                                                                                           |
 
 ## 2.7 Key trade-offs
 
-| Decision | Alternative | Reason |
-|----------|-------------|--------|
+| Decision                                                                                                      | Alternative                                        | Reason                                                                                                                                                                                                                           |
+| ------------------------------------------------------------------------------------------------------------- | -------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **Journal header + signed lines** (one transaction, 1–2 lines on balance-sheet accounts; categories on lines) | Full double-entry with income and expense accounts | Gives the guarantees of double-entry for transfers (one atomic record, two legs that balance) without making me manage "Expenses:Food" accounts. Categories on lines allow split transactions later without changing the schema. |
-| **Derived balances, cost basis and gains** (computed from lines, not stored) | Stored running balances | Editing or deleting an old record cannot leave a stale total. At personal scale (tens of thousands of rows) the cost is negligible, and caching can be added later behind the same domain function. |
-| **Calculations in TypeScript domain** | SQL views | Unit-testable with Vitest, written once, and reused for reports, CSV and snapshots. SQL only enforces invariants and does plain sums. |
-| **RPC per multi-row write** | Several PostgREST calls from the server | Atomicity. A failed transfer or import leaves nothing half-written. |
-| **Online-first PWA** | Offline queue | The brief puts reliability first. Offline writes need conflict resolution, so they are left for later. |
-| **Weighted-average cost** | FIFO or specific lots | The brief requires it. Its limitations are documented. A lots table can be added later because movements are stored, not totals. |
-| **Hand-written minimal service worker** | `next-pwa` / Serwist | Full control so that authenticated HTML and data responses are never cached. One less dependency. |
+| **Derived balances, cost basis and gains** (computed from lines, not stored)                                  | Stored running balances                            | Editing or deleting an old record cannot leave a stale total. At personal scale (tens of thousands of rows) the cost is negligible, and caching can be added later behind the same domain function.                              |
+| **Calculations in TypeScript domain**                                                                         | SQL views                                          | Unit-testable with Vitest, written once, and reused for reports, CSV and snapshots. SQL only enforces invariants and does plain sums.                                                                                            |
+| **RPC per multi-row write**                                                                                   | Several PostgREST calls from the server            | Atomicity. A failed transfer or import leaves nothing half-written.                                                                                                                                                              |
+| **Online-first PWA**                                                                                          | Offline queue                                      | The brief puts reliability first. Offline writes need conflict resolution, so they are left for later.                                                                                                                           |
+| **Weighted-average cost**                                                                                     | FIFO or specific lots                              | The brief requires it. Its limitations are documented. A lots table can be added later because movements are stored, not totals.                                                                                                 |
+| **Hand-written minimal service worker**                                                                       | `next-pwa` / Serwist                               | Full control so that authenticated HTML and data responses are never cached. One less dependency.                                                                                                                                |
 
 ## 2.8 Hosting and free-tier limits
 
@@ -136,10 +136,10 @@ These must be **re-checked against the providers' current pricing pages before d
 
 ## 2.9 Environments
 
-| Environment | Database | Data |
-|-------------|----------|------|
-| CI and Claude Code container | Plain PostgreSQL 16 with a small `auth` shim (the `auth.uid()` and `authenticated` roles), with migrations applied | Synthetic fixtures only |
-| Local development (your PC) | Supabase CLI local stack (needs Docker Desktop) **or** a separate free "dev" Supabase project | `seed.dev.sql` demo data |
-| Production | One Supabase Free project + Vercel | Your real data only. No seed is ever run here. |
+| Environment                  | Database                                                                                                           | Data                                           |
+| ---------------------------- | ------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------- |
+| CI and Claude Code container | Plain PostgreSQL 16 with a small `auth` shim (the `auth.uid()` and `authenticated` roles), with migrations applied | Synthetic fixtures only                        |
+| Local development (your PC)  | Supabase CLI local stack (needs Docker Desktop) **or** a separate free "dev" Supabase project                      | `seed.dev.sql` demo data                       |
+| Production                   | One Supabase Free project + Vercel                                                                                 | Your real data only. No seed is ever run here. |
 
 `src/lib/env.ts` validates environment variables with Zod at startup and refuses to start if a value is missing or malformed. It also refuses to start if the service-role key would be exposed as `NEXT_PUBLIC_*`.

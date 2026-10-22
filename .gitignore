@@ -11,3 +11,9 @@ test-results/
 *.sql.gz
 .vercel/
 .supabase/
+*.tsbuildinfo
+next-env.d.ts
+.DS_Store
+*.pem
+/build
+.tmp/

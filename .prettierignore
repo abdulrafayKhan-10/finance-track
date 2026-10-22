@@ -1,0 +1,7 @@
+pnpm-lock.yaml
+.next
+.tmp
+coverage
+supabase/migrations
+tests/db/support/*.sql
+next-env.d.ts
