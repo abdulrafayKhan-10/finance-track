@@ -11,12 +11,12 @@ Supabase hosts the database and the sign-in system. Use **two** free projects: o
 3. **Apply the database migrations**, using either option:
    - **Supabase CLI** (recommended; run in the repository folder on your PC):
      ```bash
-     npx supabase login
-     npx supabase init            # only once; creates supabase/config.toml, answer "N" to the IDE questions
-     npx supabase link --project-ref <your-project-ref>
+     npx supabase login                                  # opens the browser once
+     npx supabase link --project-ref <your-project-ref>  # asks for the database password
+     npx supabase db push --dry-run                      # lists the migrations it will apply
      npx supabase db push
      ```
-     The project ref is the `xxxx` in `https://xxxx.supabase.co`.
+     The project ref is the `xxxx` in `https://xxxx.supabase.co`. `supabase/config.toml` is already in the repository, so `supabase init` isn't needed. Don't run `supabase migration new` either: it only creates an empty migration file, and all the migrations already exist.
    - **No CLI:** open _SQL Editor_ in the Supabase dashboard, then paste and run each file from `supabase/migrations/` **in filename order** (0001 first).
 4. **Authentication → Sign In / Providers → Email:** keep Email on, and turn **"Allow new users to sign up" OFF**.
 5. **Authentication → Users → Add user → Create new user:** your email, a strong password (12+ characters), with **Auto Confirm User** ticked.
