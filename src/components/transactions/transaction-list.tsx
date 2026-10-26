@@ -35,10 +35,11 @@ function Headline({ t, className }: { t: TransactionView; className?: string }) 
   );
 }
 
-export function TransactionList({ items }: { items: TransactionView[] }) {
+/** `compact` always uses the card layout (for narrow dashboard panels). */
+export function TransactionList({ items, compact = false }: { items: TransactionView[]; compact?: boolean }) {
   return (
     <>
-      <table className="hidden w-full text-sm md:table">
+      <table className={compact ? "hidden" : "hidden w-full text-sm md:table"}>
         <caption className="sr-only">Transactions</caption>
         <thead className="border-b text-left text-xs text-muted-foreground">
           <tr>
@@ -85,10 +86,10 @@ export function TransactionList({ items }: { items: TransactionView[] }) {
         </tbody>
       </table>
 
-      <ul className="grid divide-y rounded-xl border md:hidden">
+      <ul className={compact ? "grid divide-y" : "grid divide-y rounded-xl border md:hidden"}>
         {items.map((t) => (
           <li key={t.id}>
-            <Link href={`/transactions/${t.id}`} className="flex gap-3 p-4">
+            <Link href={`/transactions/${t.id}`} className={compact ? "flex gap-3 py-2" : "flex gap-3 p-4"}>
               <span className="grid min-w-0 flex-1 gap-1">
                 <span className="truncate font-medium">
                   <Title t={t} />

@@ -63,14 +63,16 @@ Investment fees, adjustments, transfers, buys and sells are reported in separate
 - **Actual eligible spending** for (month M, category C) = −Σ(expense and refund lines in C and its subcategories, dated in M), converted to the budget currency at each line's date (4.6).
 - The **overall limit** uses all expense and refund lines in M.
 - `Remaining = Budget − Actual`. `% used = Actual ÷ Budget` (budget > 0 is enforced). The status is _over_ when Actual > Budget and _warning_ at ≥ 85% (configurable).
+- Budgets are set on **top-level expense categories** (plus one overall limit per month), in the reporting currency at the time they are set; a category budget covers its subcategories, so budgeted totals never overlap.
 - Transfers, buys and investment fees are never eligible (ACC-BUD-1). Lines whose conversion is unavailable are listed as "not counted: missing rate" and are never silently dropped (ACC-BUD-2).
-- History compares the same category over the previous 6 or 12 months.
+- The budgets page compares each category with its spending in the previous 3 months; the budget report covers a whole year.
 
 ## 4.5 Savings goals
 
 - **linked_account mode:** progress = the working balance of the linked account, converted to the goal currency at today's rate (or "unavailable"). The user cannot add allocations in this mode.
 - **allocations mode:** progress = Σ allocations (earmarks). Allocations are a planning label on money that is already counted in an account. They **never** change balances or net worth (ACC-GOAL-1).
-- If an account's total allocations exceed its current balance, the app warns about over-allocation (ACC-GOAL-2).
+- If an account's total allocations exceed its current balance, the app warns about over-allocation (ACC-GOAL-2). Allocations name an optional source account, which must use the goal's currency so the comparison is meaningful.
+- Allocations are append-only (correct by deleting and re-adding), can't take a goal's allocated total below zero, and lock the goal's currency and funding mode. A linked goal can only follow an asset account.
 - `% = min(progress ÷ target, 100%)` is shown, and the raw progress is also kept. A goal is shown as _reached_ when progress ≥ target; it becomes _completed_ only when the user confirms.
 
 ## 4.6 Currency rules
@@ -128,6 +130,8 @@ No double counting, by construction (ACC-NW-1..3):
 - Goal allocations are not assets.
 - A physical asset (gold at home, a car) is either an `other_asset` _account_ with manual adjustments **or** an `asset` held in an investment-type account, never both. The UI guides the user towards using assets for anything that has a quantity.
 - Holdings are never counted twice when one asset is held in two accounts, because each (account, asset) position is separate and the quantities do not overlap.
+
+**Snapshot drift.** A snapshot is frozen. If records dated on or before it are edited later, the net-worth page shows "records changed since" next to it, with the recalculated figure.
 
 **Snapshots** store the computed figures plus every input used (balances, quantities, valuation and date, FX rate and date, unvalued and unconvertible items, `method_version`). Re-running the calculation for `as_of` against the same records reproduces the snapshot exactly (ACC-NW-4). The history chart combines stored snapshots with month-end values computed on demand, and labels which is which.
 

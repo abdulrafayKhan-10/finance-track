@@ -34,7 +34,7 @@ export function ProfileForm({
         label="Reporting currency"
         defaultValue={initial.base_currency}
         error={e.base_currency}
-        hint="Totals across currencies are converted into this one, using your own dated exchange rates (Phase 4)."
+        hint="Totals across currencies are converted into this one, using your own dated exchange rates (Settings → Exchange rates)."
       >
         {CURRENCY_CODES.map((c) => (
           <option key={c} value={c}>

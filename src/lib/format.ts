@@ -52,3 +52,24 @@ export function formatTimestamp(iso: string, timeZone: string): string {
     timeZone,
   }).format(new Date(iso));
 }
+
+const monthFormat = new Intl.DateTimeFormat("en-GB", { month: "short", year: "2-digit", timeZone: "UTC" });
+const longMonthFormat = new Intl.DateTimeFormat("en-GB", { month: "long", year: "numeric", timeZone: "UTC" });
+
+/** "Mar 26" for a month or a date in it. */
+export function formatMonthShort(monthOrDate: string): string {
+  return monthFormat.format(new Date(`${monthOrDate.slice(0, 7)}-01T00:00:00Z`));
+}
+
+/** "March 2026". */
+export function formatMonthLong(monthOrDate: string): string {
+  return longMonthFormat.format(new Date(`${monthOrDate.slice(0, 7)}-01T00:00:00Z`));
+}
+
+/** A ratio as a whole-number percentage, e.g. 0.756 → "76%". */
+export function formatPercent(ratio: {
+  toFixed: (dp: number) => string;
+  times: (n: number) => { toFixed: (dp: number) => string };
+}): string {
+  return `${ratio.times(100).toFixed(0)}%`;
+}

@@ -32,6 +32,11 @@ export class Money {
     return items.reduce((acc, m) => acc.plus(m), Money.zero(currency));
   }
 
+  /** The larger of this amount and zero. */
+  static max0(m: Money): Money {
+    return m.isNegative() ? Money.zero(m.currency) : m;
+  }
+
   plus(other: Money): Money {
     this.assertSameCurrency(other);
     return new Money(this.amount.plus(other.amount), this.currency);

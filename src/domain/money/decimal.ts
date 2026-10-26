@@ -13,7 +13,8 @@ export const Dec = DecimalJs.clone({
 });
 export type Dec = InstanceType<typeof Dec>;
 
-const DECIMAL_STRING = /^-?\d{1,16}(\.\d{1,10})?$/;
+// Covers every numeric column: numeric(20,4) money, numeric(28,10) quantities, numeric(24,12) rates.
+const DECIMAL_STRING = /^-?\d{1,18}(\.\d{1,12})?$/;
 
 /** Parses a database or form value. Rejects JS numbers so floats can never leak in. */
 export function dec(value: string | Dec): Dec {

@@ -64,7 +64,8 @@ export function ledger() {
         openingDate,
         status: "active",
         includeInNetWorth: true,
-        isLiquid: cls === "asset",
+        // Same default as the database (accounts_defaults trigger).
+        isLiquid: ["cash", "bank", "digital_wallet", "savings"].includes(type),
       });
       return api;
     },

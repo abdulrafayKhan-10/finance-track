@@ -17,6 +17,13 @@ describe("Money", () => {
     expect(() => Money.sum([Money.of("1", "USD")], "PKR")).toThrow(CurrencyMismatchError);
   });
 
+  it("reads every database numeric format, including 12-decimal exchange rates", () => {
+    expect(dec("280.000000000000").toString()).toBe("280");
+    expect(dec("123456789012345678.1234").toString()).toBe("123456789012345678.1234");
+    expect(dec("0.0000000001").toString()).toBe("0.0000000001");
+    expect(() => dec("1.1234567890123")).toThrow(TypeError);
+  });
+
   it("never accepts JavaScript numbers", () => {
     expect(() => dec(0.1 as unknown as string)).toThrow(TypeError);
     expect(() => Money.of("1e3", "PKR")).toThrow(TypeError);

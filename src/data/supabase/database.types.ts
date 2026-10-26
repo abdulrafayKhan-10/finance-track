@@ -70,6 +70,69 @@ export type AuditEventRow = {
   txid: number;
 };
 
+export type BudgetRow = {
+  id: string;
+  user_id: string;
+  month: string;
+  category_id: string | null;
+  amount: string;
+  currency: string;
+  created_at: string;
+  updated_at: string;
+};
+
+export type GoalRow = {
+  id: string;
+  user_id: string;
+  name: string;
+  description: string | null;
+  target_amount: string;
+  currency: string;
+  target_date: string | null;
+  funding_mode: "linked_account" | "allocations";
+  linked_account_id: string | null;
+  status: "active" | "completed" | "archived";
+  completed_on: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type AllocationRow = {
+  id: string;
+  user_id: string;
+  goal_id: string;
+  allocated_on: string;
+  amount: string;
+  source_account_id: string | null;
+  note: string | null;
+  created_at: string;
+};
+
+export type ExchangeRateRow = {
+  id: string;
+  user_id: string;
+  base: string;
+  quote: string;
+  rate: string;
+  effective_on: string;
+  source_note: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type SnapshotRow = {
+  id: string;
+  user_id: string;
+  as_of: string;
+  base_currency: string;
+  total_assets: string;
+  total_liabilities: string;
+  net_worth: string;
+  method_version: number;
+  details: Record<string, unknown>;
+  created_at: string;
+};
+
 export type ProfileRow = {
   user_id: string;
   display_name: string | null;
@@ -103,6 +166,30 @@ export type Database = {
       >;
       reconciliations: Table<ReconciliationRow, never, never>;
       audit_events: Table<AuditEventRow, never, never>;
+      budgets: Table<
+        BudgetRow,
+        Pick<BudgetRow, "month" | "category_id" | "amount" | "currency">,
+        Partial<Pick<BudgetRow, "amount" | "currency">>
+      >;
+      savings_goals: Table<
+        GoalRow,
+        Pick<
+          GoalRow,
+          "name" | "description" | "target_amount" | "currency" | "target_date" | "funding_mode" | "linked_account_id"
+        >,
+        Partial<Omit<GoalRow, "id" | "user_id" | "created_at" | "updated_at">>
+      >;
+      goal_allocations: Table<
+        AllocationRow,
+        Pick<AllocationRow, "goal_id" | "allocated_on" | "amount" | "source_account_id" | "note">,
+        never
+      >;
+      exchange_rates: Table<
+        ExchangeRateRow,
+        Pick<ExchangeRateRow, "base" | "quote" | "rate" | "effective_on" | "source_note">,
+        Partial<Pick<ExchangeRateRow, "rate" | "effective_on" | "source_note">>
+      >;
+      net_worth_snapshots: Table<SnapshotRow, Omit<SnapshotRow, "id" | "user_id" | "created_at">, never>;
     };
     Views: Record<never, never>;
     Functions: {
@@ -152,6 +239,19 @@ export type Database = {
       };
       category_usage: { Args: Record<string, never>; Returns: { category_id: string; line_count: number }[] };
       reconcile_account: { Args: { p: ReconcilePayload }; Returns: string };
+      copy_budgets: { Args: { p_from: string; p_to: string }; Returns: number };
+      ledger_lines: {
+        Args: { p_from?: string | null; p_to?: string | null };
+        Returns: {
+          transaction_id: string;
+          account_id: string;
+          amount: string;
+          category_id: string | null;
+          occurred_on: string;
+          status: TransactionStatus;
+          kind: TransactionKind;
+        }[];
+      };
     };
     Enums: Record<never, never>;
     CompositeTypes: Record<never, never>;

@@ -141,12 +141,21 @@ All of these are `SECURITY INVOKER`, so RLS applies, with `set search_path = ''`
 | `merge_category(from, into)`                             | Moves lines to another category of the same kind and deletes the source (not system categories; subcategories first).                                                                                                                           |
 | `reconcile_account(p jsonb)`                             | Clears the ticked transactions dated on or before the statement date, computes the cleared balance, optionally posts an adjustment for the difference, stores the reconciliation and locks the cleared transactions it covers.                  |
 
+**Built (Phase 4, migrations 0007–0009):**
+
+| Function                    | Purpose                                                                                                 |
+| --------------------------- | ------------------------------------------------------------------------------------------------------- |
+| `copy_budgets(from, to)`    | Copies one month's budgets into another month, never overwriting an existing budget.                    |
+| `merge_category` (replaced) | Also merges budgets: same-month amounts are added, otherwise the budget moves to the target.            |
+| `ledger_lines(from, to)`    | Plain list of lines with kind, date and status for the domain's reports, budgets and net-worth history. |
+
+Snapshots are inserted directly into `net_worth_snapshots` (a single row): the server computes them with `computeNetWorth` and stores every input in `details`. The table has no update grant, and a check ensures `net_worth = total_assets − total_liabilities`.
+
 **Planned:**
 
 | Function                                                     | Purpose                                                                            |
 | ------------------------------------------------------------ | ---------------------------------------------------------------------------------- |
 | `import_transactions(batch jsonb)` / `undo_import(batch_id)` | All-or-nothing CSV commit with per-row errors; removing a whole batch (Phase 6).   |
-| `create_net_worth_snapshot(p jsonb)`                         | Stores a snapshot that the server computed with the domain code (Phase 4).         |
 | `restore_backup(p jsonb)` / `delete_my_data()`               | Full restore into an empty account, and deleting all of the user's data (Phase 6). |
 
 ## 3.6 Deletion, edit and reversal strategy
@@ -168,10 +177,11 @@ Migrations live in `supabase/migrations/` (timestamp-prefixed filenames, numbere
 4. `0004_audit.sql`: `audit_events`, generic audit trigger attached to the financial tables.
 5. `0005_ledger_rpcs.sql` (built): create, update and delete transaction functions, list, postings, totals, history, category usage and merge.
 6. `0006_reconciliation.sql` (built): `reconciliations`, the transaction lock, `reconcile_account`.
-7. `0007_budgets_goals.sql`
-8. `0008_fx.sql`
-9. `0009_investments.sql`: assets, valuations, holding movements, position invariant, investment RPC branches.
-10. `0010_snapshots_backup.sql`: snapshots, import batches, restore, delete-my-data.
+7. `0007_budgets_goals.sql` (built): budgets (top-level expense categories or overall), `copy_budgets`, savings goals, append-only goal allocations with a non-negative total.
+8. `0008_exchange_rates.sql` (built): dated exchange rates.
+9. `0009_net_worth_snapshots.sql` (built): immutable snapshots and `ledger_lines`.
+10. `0010_investments.sql`: assets, valuations, holding movements, position invariant, investment RPC branches.
+11. `0011_imports_backup.sql`: import batches, restore, delete-my-data.
 
 Every migration ships with SQL tests (RLS and invariants) in the same PR. Types are regenerated after each schema change.
 

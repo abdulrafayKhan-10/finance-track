@@ -1,4 +1,4 @@
-import { ChevronRight, ShieldCheck, Tags, UserRound } from "lucide-react";
+import { ArrowRightLeft, ChevronRight, ShieldCheck, Tags, UserRound } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { NotBuiltYet } from "@/components/app-shell/not-built-yet";
@@ -11,6 +11,12 @@ export const metadata: Metadata = { title: "Settings" };
 const LINKS = [
   { href: "/settings/profile", icon: UserRound, title: "Profile", text: "Reporting currency and timezone" },
   { href: "/settings/categories", icon: Tags, title: "Categories", text: "Income and expense categories" },
+  {
+    href: "/settings/exchange-rates",
+    icon: ArrowRightLeft,
+    title: "Exchange rates",
+    text: "Your dated rates for converting other currencies",
+  },
   { href: "/settings/security", icon: ShieldCheck, title: "Security", text: "Password and two-factor authentication" },
 ];
 
@@ -36,10 +42,7 @@ export default async function SettingsPage() {
             <ThemeToggle />
           </div>
         </div>
-        <NotBuiltYet
-          phase={4}
-          features={["Exchange rates (Phase 4)", "Data export, backup, restore and account deletion (Phase 6)"]}
-        />
+        <NotBuiltYet phase={6} features={["Data export, backup, restore and account deletion"]} />
       </div>
     </>
   );

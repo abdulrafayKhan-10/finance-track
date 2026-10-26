@@ -2,7 +2,7 @@
 
 A private personal finance and investment tracker for a single user. It uses manual entry, PKR as the default currency and Asia/Karachi as the timezone, and keeps data in a private cloud database synchronized between PC and phone.
 
-**Status:** Phase 3 (core accounting) complete: accounts, categories, transactions, transfers, refunds, adjustments and reconciliation. Budgets, goals and reports come next (Phase 4).
+**Status:** Phase 4 complete: accounts, transactions, reconciliation, exchange rates, budgets, savings goals, net worth with snapshots, reports and the dashboard. Investments come next (Phase 5).
 
 Getting started: see [local development](docs/local-development.md).
 
@@ -19,3 +19,4 @@ Getting started: see [local development](docs/local-development.md).
 | 7   | [Testing strategy](docs/07-testing-strategy.md)                 | Test layers, invariant tests, tooling                                 |
 | 8   | [Implementation checklist](docs/08-implementation-checklist.md) | Phased plan, progress, open decisions                                 |
 | —   | [Local development](docs/local-development.md)                  | Setup, Supabase project configuration, scripts, test database         |
+| —   | [What I need from you](docs/09-what-i-need-from-you.md)         | Accounts, settings and decisions the owner provides                   |

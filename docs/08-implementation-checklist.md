@@ -61,14 +61,23 @@ Legend: `[x]` done and verified, `[ ]` not started, `[~]` in progress.
 - Sorting is by date (newest or oldest first). Sorting by amount is not offered because transfers and splits have no single amount.
 - The account ledger shows the newest 100 postings, with a "show all" link.
 
-## Phase 4: Budgets, goals and reporting
+## Phase 4: Budgets, goals and reporting — done (2026-10-27)
 
-- [ ] Exchange-rate management UI
-- [ ] Budgets (category + overall, copy month, history)
-- [ ] Savings goals (linked/allocations, over-allocation warning)
-- [ ] Cash flow, savings rate, category reports
-- [ ] Net worth (cash and liabilities), snapshots
-- [ ] Dashboard with period picker
+- [x] Exchange rates: add and delete dated rates (Settings → Exchange rates); every conversion uses the rate in force on the amount's own date
+- [x] Budgets: per top-level expense category plus an overall limit, month navigation, copy last month, over/near warnings, 3-month comparison
+- [x] Savings goals: linked-account or allocation goals, allocate and release, over-allocation warning, complete, archive and delete
+- [x] Net worth: assets − liabilities with per-account conversion and rates shown, liquid and investment-account cash broken out, 24-month trend with a table view, snapshots with drift detection
+- [x] Reports: monthly (chart + table, totals), categories (with subcategory breakdown), budget performance and yearly
+- [x] Dashboard: period picker, net worth hero and 12-month trend, income, spending, net cash flow, savings rate, spending by category, budgets, balances, goals, recent transactions
+- [x] Tests: 164 unit/component tests and 84 database tests (budgets, goals, rates, snapshots, cross-user isolation for every new table). INV-7 (no double counting) is now covered; INV-5 and INV-9 wait for Phase 5
+- [x] Browser walkthrough (desktop + mobile, light + dark) against real PostgreSQL through the local stand-in: 28/28 checks
+- [x] Chart colours validated with the palette checker (2 series, light and dark: all checks pass)
+
+### Phase 4 notes
+
+- The dashboard's Investments card says honestly that valuations arrive in Phase 5; investment accounts count only their cash until then.
+- Budgets keep the currency they were created in; changing the reporting currency doesn't convert old budgets.
+- CSV export of reports is part of Phase 6.
 
 ## Phase 5: Investment portfolio
 
