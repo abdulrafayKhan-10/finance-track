@@ -2,7 +2,7 @@
 
 A private personal finance and investment tracker for a single user. It uses manual entry, PKR as the default currency and Asia/Karachi as the timezone, and keeps data in a private cloud database synchronized between PC and phone.
 
-**Status:** Phase 2 (foundation) complete: authentication, database schema with RLS, app shell. Financial modules start in Phase 3.
+**Status:** Phase 3 (core accounting) complete: accounts, categories, transactions, transfers, refunds, adjustments and reconciliation. Budgets, goals and reports come next (Phase 4).
 
 Getting started: see [local development](docs/local-development.md).
 

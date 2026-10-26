@@ -124,38 +124,50 @@ Position invariant: after any write, the running quantity of every (account, ass
 
 ## 3.5 Database functions (RPCs)
 
-All of these are `SECURITY INVOKER`, so RLS applies, with `set search_path = ''`. Each runs in one transaction and returns ids or text-encoded numbers.
+All of these are `SECURITY INVOKER`, so RLS applies, with `set search_path = ''`. Each runs in one transaction and returns ids or text-encoded numbers. Error codes: `FT001` shape invalid, `FT002` account field locked, `FT003` category hierarchy, `FT004` archived account, `FT005` edit conflict, `FT006` reconciled (needs unlock), `FT007` invalid payload, `FT404` not found. `src/lib/errors.ts` maps each to a safe message.
 
-| Function                                                                                     | Purpose                                                                                                              |
-| -------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
-| `create_transaction(p jsonb)` / `update_transaction(id, p jsonb)` / `delete_transaction(id)` | Writes or replaces the header, lines and movements atomically, after shape, ownership, currency and position checks. |
-| `import_transactions(batch jsonb)`                                                           | All-or-nothing CSV commit. It returns per-row errors and writes nothing if any row is invalid.                       |
-| `undo_import(batch_id)`                                                                      | Removes a whole import batch.                                                                                        |
-| `reconcile_account(p jsonb)`                                                                 | Marks lines cleared, stores the reconciliation, and creates an optional adjustment.                                  |
-| `merge_category(from, into)`                                                                 | Moves lines to another category and archives the source.                                                             |
-| `create_net_worth_snapshot(p jsonb)`                                                         | Stores a snapshot that the server computed with the domain code. The RPC only checks its shape.                      |
-| `restore_backup(p jsonb)`                                                                    | Restores a full backup into an empty account, remapping ids. All-or-nothing.                                         |
-| `delete_my_data()`                                                                           | Removes all of the user's rows. The auth user is then deleted by a server route that uses the service role.          |
-| `aggregate_lines(from, to, group_by)`                                                        | Read-only plain sums by account, currency, category and month. Applies no policy.                                    |
+**Built (Phase 3, migrations 0005–0006):**
+
+| Function                                                 | Purpose                                                                                                                                                                                                                                         |
+| -------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `create_transaction(p jsonb)`                            | Header and lines in one call. Rejects archived accounts (`FT004`) and amounts with more decimals than the currency allows (`FT001`; never rounded). Runs the deferred shape checks before returning, so the caller gets the error.              |
+| `update_transaction(id, p, expected_updated_at, unlock)` | Replaces header and lines atomically. `expected_updated_at` stops a stale edit from another device overwriting a newer one (`FT005`). Reconciled transactions need `unlock = true` (`FT006`), which also detaches them from the reconciliation. |
+| `delete_transaction(id, expected_updated_at, unlock)`    | Same guards as update; cascades to lines.                                                                                                                                                                                                       |
+| `list_transactions(filter jsonb, limit)`                 | Filtered, keyset-paginated list with lines; filters for id, account, category (including subcategories), kinds, status, date range, tag and text (`%`, `_` and `\` are matched literally). Amounts and timestamps are returned as text.         |
+| `account_postings(account_id)`                           | Every line on one account in ledger order, with the other account of a transfer.                                                                                                                                                                |
+| `account_line_totals(as_of)`                             | Plain sums per account and status. The domain adds opening balances.                                                                                                                                                                            |
+| `transaction_history(id)`                                | Audit history of one transaction, one row per save, including amount-only edits (which change only lines).                                                                                                                                      |
+| `category_usage()`                                       | Line count per category, so the UI knows what can be deleted.                                                                                                                                                                                   |
+| `merge_category(from, into)`                             | Moves lines to another category of the same kind and deletes the source (not system categories; subcategories first).                                                                                                                           |
+| `reconcile_account(p jsonb)`                             | Clears the ticked transactions dated on or before the statement date, computes the cleared balance, optionally posts an adjustment for the difference, stores the reconciliation and locks the cleared transactions it covers.                  |
+
+**Planned:**
+
+| Function                                                     | Purpose                                                                            |
+| ------------------------------------------------------------ | ---------------------------------------------------------------------------------- |
+| `import_transactions(batch jsonb)` / `undo_import(batch_id)` | All-or-nothing CSV commit with per-row errors; removing a whole batch (Phase 6).   |
+| `create_net_worth_snapshot(p jsonb)`                         | Stores a snapshot that the server computed with the domain code (Phase 4).         |
+| `restore_backup(p jsonb)` / `delete_my_data()`               | Full restore into an empty account, and deleting all of the user's data (Phase 6). |
 
 ## 3.6 Deletion, edit and reversal strategy
 
 - **Edits:** allowed on any transaction. Because balances and gains are derived, there are no stored totals to correct. The audit trigger records the before and after images.
 - **Deletes:** hard delete with cascade to lines and movements, recorded in `audit_events` with the full before image, so the record can be restored from the audit view.
-- **Reconciled records:** a transaction linked to a reconciliation needs an explicit "unlock" confirmation before it can be edited or deleted. The reconciliation then shows "changed since reconciled".
+- **Reconciled records:** a transaction linked to a reconciliation needs an explicit "unlock" confirmation before it can be edited or deleted. Unlocking detaches it, and the account shows "changed since reconciled" if the cleared balance on the statement date no longer matches. A transfer is locked as soon as either of its accounts is reconciled past its date. Undoing a reconciliation unlocks its transactions; any adjustment it created stays until you delete it.
+- **Concurrent edits:** every edit and delete carries the `updated_at` the form was loaded with. If the record changed on another device in the meantime, the save is refused and nothing changes.
 - **Reversals:** for a real-world reversal (for example a bounced payment), the user records a refund, or the opposite transaction, linked with `refund_of_id`. The original is kept.
 - **Accounts, categories and assets** that have history are archived, not deleted.
 
 ## 3.7 Migration plan
 
-Migrations live in `supabase/migrations/` and are applied with `supabase db push` (or `psql` in CI). Nothing is ever changed by hand in the production SQL editor.
+Migrations live in `supabase/migrations/` (timestamp-prefixed filenames, numbered below in order) and are applied with `supabase db push` (or `psql` in CI). Nothing is ever changed by hand in the production SQL editor.
 
 1. `0001_extensions_reference.sql`: `pgcrypto`, `pg_trgm`, enums, `currencies` seed.
 2. `0002_profiles_accounts_categories.sql`: tables, composite keys, profile/default-category trigger, RLS.
 3. `0003_ledger.sql`: `transactions`, `transaction_lines`, shape constraint trigger, RLS.
 4. `0004_audit.sql`: `audit_events`, generic audit trigger attached to the financial tables.
-5. `0005_ledger_rpcs.sql`: create, update, delete and import transaction functions, `aggregate_lines`.
-6. `0006_reconciliation.sql`
+5. `0005_ledger_rpcs.sql` (built): create, update and delete transaction functions, list, postings, totals, history, category usage and merge.
+6. `0006_reconciliation.sql` (built): `reconciliations`, the transaction lock, `reconcile_account`.
 7. `0007_budgets_goals.sql`
 8. `0008_fx.sql`
 9. `0009_investments.sql`: assets, valuations, holding movements, position invariant, investment RPC branches.

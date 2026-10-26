@@ -40,17 +40,26 @@ Legend: `[x]` done and verified, `[ ]` not started, `[~]` in progress.
 - Category inserts are not audited (the 16 default categories would add noise); category updates and deletes are.
 - `database.types.ts` is hand-written for the one table the app reads so far. Regenerate it with the Supabase CLI once a project is linked.
 
-## Phase 3: Core accounting (priority)
+## Phase 3: Core accounting — done (2026-10-26)
 
-- [ ] `domain/money`, `domain/fx` + tests (rounding, currency mismatch)
-- [ ] Ledger RPCs (create, update, delete transaction) with shape trigger + atomicity tests
-- [ ] Accounts CRUD, opening balances, archive
-- [ ] Categories CRUD, subcategories, merge
-- [ ] Transactions UI: forms per kind, list, filters, search, keyset pagination
-- [ ] Transfers (same and cross currency)
-- [ ] Refunds, adjustments, pending/cleared
-- [ ] Reconciliation + history
-- [ ] Invariant suite INV-1..10 passing
+- [x] Domain: `Money` (decimal.js, half-even, refuses mixing currencies), currencies, dates (Asia/Karachi "today"), FX lookup and conversion (as-of rates, inverse, stale flag, unavailable), balances, classification, cash flow and savings rate, entry signing, reconciliation check
+- [x] Ledger RPCs (migration 0005) with edit-conflict protection, archived-account guard and exact-decimal guard; reconciliation (migration 0006)
+- [x] Accounts: create, edit, archive/close, delete when unused; balances and cleared balances per account, totals per currency
+- [x] Categories: create, subcategories, rename, archive, merge, delete when unused; usage counts
+- [x] Transactions: form per kind (expense, income, transfer, refund, adjustment), edit, delete with confirmation, history, list with search, filters, sort and keyset pagination
+- [x] Transfers in one currency and across currencies (amount sent and received)
+- [x] Refunds, adjustments (reason required), pending/cleared
+- [x] Reconciliation with live difference, optional adjustment, locking, undo and "changed since reconciled"
+- [x] Profile: display name, reporting currency, timezone
+- [x] Tests: 130 unit/component tests and 73 database tests. Invariants: INV-1, 2, 3, 4, 6, 8 and 10 are covered; INV-5, 7 and 9 need investments and valuations and are covered in Phases 4–5
+- [x] Browser walkthrough (desktop + mobile) against real PostgreSQL through a local PostgREST-style stand-in: 26/26 checks
+
+### Phase 3 notes
+
+- Split transactions (several categories on one expense) are supported by the schema but not by the form yet; such records show "can't be edited with this form".
+- Linking a refund to its original expense (`refund_of_id`) is kept on edit but can't be set from the form yet.
+- Sorting is by date (newest or oldest first). Sorting by amount is not offered because transfers and splits have no single amount.
+- The account ledger shows the newest 100 postings, with a "show all" link.
 
 ## Phase 4: Budgets, goals and reporting
 

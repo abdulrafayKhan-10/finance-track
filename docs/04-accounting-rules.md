@@ -43,6 +43,8 @@ Rules:
 - **ACC-CC-1 (credit-card policy):** a card purchase is an **expense on the purchase date** (a negative line on the card account) and counts towards the budget then. **Paying the card bill is a transfer** from the bank account to the card account, so it never counts as an expense. This prevents double counting.
 - **ACC-LOAN-1:** a loan repayment is split by the user into a transfer for the principal (bank → loan) and an expense for the interest ("Loan interest" category).
 - **ACC-PEND-1 (pending policy):** pending records are included in working balances and in reports, with a "pending" marker. They are excluded from the cleared balance used for reconciliation.
+- **ACC-REC-1 (reconciliation):** cleared balance on the statement date = opening balance + Σ cleared lines dated on or before it. Difference = statement − cleared. An optional adjustment for the difference is dated on the statement date and is cleared. Reconciled transactions are locked (see data model §3.6).
+- **ACC-ARCH-1 (archived accounts):** archived accounts accept no new postings; existing transactions on them stay editable. Closed accounts still accept postings (for final interest or fees).
 
 ## 4.3 Cash flow and savings rate (for a period P, in the reporting currency)
 

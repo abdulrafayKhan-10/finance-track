@@ -1,4 +1,4 @@
-import { ChevronRight, ShieldCheck } from "lucide-react";
+import { ChevronRight, ShieldCheck, Tags, UserRound } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { NotBuiltYet } from "@/components/app-shell/not-built-yet";
@@ -8,6 +8,12 @@ import { requireUser } from "@/lib/auth";
 
 export const metadata: Metadata = { title: "Settings" };
 
+const LINKS = [
+  { href: "/settings/profile", icon: UserRound, title: "Profile", text: "Reporting currency and timezone" },
+  { href: "/settings/categories", icon: Tags, title: "Categories", text: "Income and expense categories" },
+  { href: "/settings/security", icon: ShieldCheck, title: "Security", text: "Password and two-factor authentication" },
+];
+
 export default async function SettingsPage() {
   await requireUser();
   return (
@@ -15,26 +21,24 @@ export default async function SettingsPage() {
       <PageHeader title="Settings" />
       <div className="grid gap-6">
         <div className="grid divide-y overflow-hidden rounded-xl border">
-          <Link href="/settings/security" className="flex items-center gap-3 p-4 hover:bg-accent">
-            <ShieldCheck className="size-5 text-muted-foreground" aria-hidden />
-            <span className="grid flex-1 gap-0.5">
-              <span className="font-medium">Security</span>
-              <span className="text-sm text-muted-foreground">Password and two-factor authentication</span>
-            </span>
-            <ChevronRight className="size-4 text-muted-foreground" aria-hidden />
-          </Link>
+          {LINKS.map(({ href, icon: Icon, title, text }) => (
+            <Link key={href} href={href} className="flex items-center gap-3 p-4 hover:bg-accent">
+              <Icon className="size-5 text-muted-foreground" aria-hidden />
+              <span className="grid flex-1 gap-0.5">
+                <span className="font-medium">{title}</span>
+                <span className="text-sm text-muted-foreground">{text}</span>
+              </span>
+              <ChevronRight className="size-4 text-muted-foreground" aria-hidden />
+            </Link>
+          ))}
           <div className="flex items-center justify-between gap-3 p-4">
             <span className="font-medium">Theme</span>
             <ThemeToggle />
           </div>
         </div>
         <NotBuiltYet
-          phase={3}
-          features={[
-            "Profile, reporting currency and timezone",
-            "Categories (Phase 3) and exchange rates (Phase 4)",
-            "Data export, backup, restore and account deletion (Phase 6)",
-          ]}
+          phase={4}
+          features={["Exchange rates (Phase 4)", "Data export, backup, restore and account deletion (Phase 6)"]}
         />
       </div>
     </>

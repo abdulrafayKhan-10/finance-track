@@ -121,3 +121,21 @@ export async function insertTransaction(
     return id;
   });
 }
+
+/** Calls a public function as the user, like `supabase.rpc(name, args)`. Args are passed as JSON where objects. */
+export async function rpc<T = unknown>(userId: string, fn: string, args: unknown[]): Promise<T> {
+  const placeholders = args.map((_, i) => `$${i + 1}`).join(", ");
+  const values = args.map((a) => (a !== null && typeof a === "object" && !(a instanceof Date) ? JSON.stringify(a) : a));
+  const { rows } = await asUser(userId, (q) => q(`select public.${fn}(${placeholders}) as result`, values));
+  return rows[0].result as T;
+}
+
+/** Resolves to the Postgres SQLSTATE of a rejected promise (e.g. "FT001"). */
+export async function errorCode(promise: Promise<unknown>): Promise<string> {
+  try {
+    await promise;
+  } catch (error) {
+    return (error as { code?: string }).code ?? "unknown";
+  }
+  throw new Error("Expected the call to fail");
+}

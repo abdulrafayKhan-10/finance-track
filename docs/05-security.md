@@ -29,7 +29,7 @@ Items ticked in Phase 2 are covered by automated tests that run in CI. Cross-use
 - [x] RLS enabled **and forced** on every user table (an automated SQL test lists the tables without it, and the list must be empty) — `tests/db/schema-security.test.ts`
 - [x] Every policy uses `(select auth.uid())`; no `using (true)` except read-only reference data (`currencies`) — `tests/db/schema-security.test.ts`
 - [x] `anon` role: zero privileges on public tables and functions — `tests/db/schema-security.test.ts`
-- [ ] Cross-user tests: user B cannot select, insert, update or delete A's rows in any table, or by calling any RPC with A's ids
+- [x] Cross-user tests: user B cannot select, insert, update or delete A's rows in any table, or by calling any RPC with A's ids — `tests/db/isolation.test.ts`, `tests/db/ledger-rpcs.test.ts` (re-run as each new table and RPC is added)
 - [x] Composite FKs reject a line that points at another user's account even when RLS is bypassed — `tests/db/isolation.test.ts`
 - [x] Service-role key absent from the client bundle (`pnpm check:bundle`, run in CI)
 - [x] Env validation fails fast on a missing or invalid variable (unit tests, plus a manual `next start` without env, which refused to start)

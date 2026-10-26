@@ -1,5 +1,5 @@
 import { beforeAll, describe, expect, it } from "vitest";
-import { asAdmin, asUser, categoryId, createAccount, createUser, insertTransaction } from "./support/db";
+import { asAdmin, asUser, categoryId, createAccount, createUser, insertTransaction, rpc } from "./support/db";
 
 /**
  * Two-user isolation (security checklist §5.3): user B must not be able to
@@ -23,6 +23,9 @@ describe("cross-user isolation", () => {
       kind: "income",
       lines: [{ account: aliceAccount, amount: "500.00", category: aliceCategory }],
     });
+    await rpc(alice, "reconcile_account", [
+      { account_id: aliceAccount, statement_date: "2026-02-28", statement_balance: "1500.00" },
+    ]);
   });
 
   const ownedTables = ["profiles", "accounts", "categories", "transactions", "transaction_lines", "audit_events"];
@@ -47,6 +50,7 @@ describe("cross-user isolation", () => {
       await q("delete from public.transaction_lines where transaction_id = $1", [aliceTx]),
       await q("delete from public.transactions where id = $1", [aliceTx]),
       await q("delete from public.categories where id = $1", [aliceCategory]),
+      await q("delete from public.reconciliations where user_id = $1", [alice]),
     ]);
     for (const r of results) expect(r.rowCount).toBe(0);
 
