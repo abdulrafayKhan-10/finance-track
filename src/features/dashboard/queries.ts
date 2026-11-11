@@ -5,11 +5,13 @@ import { ledgerLines } from "@/data/repositories/ledger";
 import { listSnapshots } from "@/data/repositories/snapshots";
 import { budgetStatuses } from "@/domain/budgets/budgets";
 import { monthOf } from "@/domain/dates";
+import { computePortfolio } from "@/domain/investments";
 import { accountBalance, displayBalance, summarizeCashFlow } from "@/domain/ledger";
 import { computeNetWorth } from "@/domain/networth/networth";
 import { spendingByCategory } from "@/domain/reports/reports";
 import { loadFinanceContext } from "../finance-context";
 import { getGoals } from "../goals/queries";
+import { loadInvestments } from "../investments/queries";
 import { netWorthTrend } from "../networth/queries";
 import type { SelectedPeriod } from "../periods";
 import { getTransactionPage } from "../transactions/queries";
@@ -18,20 +20,22 @@ export async function getDashboard(period: SelectedPeriod) {
   const ctx = await loadFinanceContext();
   const currency = ctx.profile.baseCurrency;
   const month = monthOf(ctx.today);
-  const [lines, snapshots, postings, budgets, goals, recent] = await Promise.all([
+  const [lines, snapshots, postings, budgets, goals, recent, investments] = await Promise.all([
     ledgerLines(ctx.accounts),
     listSnapshots(),
     accountTotals(ctx.accounts),
     listBudgets(month, month),
     getGoals(),
     getTransactionPage({}, 5),
+    loadInvestments(),
   ]);
   return {
     ctx,
     currency,
     period,
-    netWorth: computeNetWorth(ctx.accounts, lines, ctx.today, currency, ctx.rates),
-    trend: netWorthTrend(ctx.accounts, lines, ctx.today, currency, ctx.rates, snapshots, 12),
+    netWorth: computeNetWorth(ctx.accounts, lines, ctx.today, currency, ctx.rates, investments),
+    trend: netWorthTrend(ctx.accounts, lines, ctx.today, currency, ctx.rates, snapshots, 12, investments),
+    portfolio: computePortfolio(investments, investments.cashLines, ctx.today, currency, ctx.rates),
     cashFlow: summarizeCashFlow(lines, period, currency, ctx.rates),
     spending: spendingByCategory(lines, period, ctx.parents, currency, ctx.rates),
     budgets: budgetStatuses(budgets, lines, ctx.parents, ctx.rates),

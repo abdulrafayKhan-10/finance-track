@@ -21,6 +21,8 @@ import { toTransactionPayload } from "./payload";
 function revalidateLedger() {
   revalidatePath("/transactions");
   revalidatePath("/accounts", "layout");
+  revalidatePath("/investments", "layout");
+  revalidatePath("/net-worth");
   revalidatePath("/");
 }
 

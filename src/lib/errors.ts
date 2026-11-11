@@ -13,6 +13,8 @@ const MESSAGES: Record<string, string> = {
   FT005: "This record changed on another device or tab. Reload it and try again.",
   FT006: "This transaction is part of a reconciliation. Confirm the unlock to change it.",
   FT007: "Some of the submitted information is invalid.",
+  FT008: "That would leave an investment account holding less than zero units. A later sale depends on it.",
+  FT009: "This asset is archived. Restore it before recording new transactions.",
   FT404: "That record no longer exists.",
   "23505": "That name is already in use.",
   "23503": "This record is still used elsewhere, or refers to something that doesn't exist.",

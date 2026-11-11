@@ -133,6 +133,8 @@ describe("form values round-trip", () => {
     status: "cleared",
     refundOfId: null,
     reconciliationId: null,
+    assetId: null,
+    movements: [],
     createdAt: "",
     updatedAt: "",
     lines: lines.map(([a, amt, cat], i) => ({

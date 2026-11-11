@@ -11,6 +11,7 @@ import { Amount } from "@/components/money/amount";
 import { ActionForm } from "@/components/planning/action-form";
 import { Badge } from "@/components/ui/badge";
 import { displayBalance } from "@/domain/ledger";
+import { NET_WORTH_METHOD_VERSION } from "@/domain/networth/networth";
 import { createSnapshot, removeSnapshot } from "@/features/networth/actions";
 import { getNetWorthPage } from "@/features/networth/queries";
 import { requireUser } from "@/lib/auth";
@@ -42,8 +43,26 @@ export default async function NetWorthPage() {
           <Amount money={current.liabilities} colored={false} />
         </Stat>
       </div>
-      <div className="mb-6">
-        <ExcludedNote excluded={current.unconvertible.map((a) => a.balance)} stale={current.usedStaleRate} />
+      <div className="mb-6 grid gap-2">
+        <ExcludedNote
+          excluded={[
+            ...current.unconvertible.map((a) => a.balance),
+            ...current.unconvertibleHoldings.flatMap((h) =>
+              h.valuation.status === "valued" ? [h.valuation.value] : [],
+            ),
+          ]}
+          stale={current.usedStaleRate}
+        />
+        {current.unvaluedHoldings.length > 0 && (
+          <p className="rounded-md border border-warning/40 p-3 text-xs text-muted-foreground">
+            {current.unvaluedHoldings.length} holding{current.unvaluedHoldings.length === 1 ? " is" : "s are"} unvalued
+            and not included: {current.unvaluedHoldings.map((h) => h.asset.name).join(", ")}.{" "}
+            <Link href="/investments" className="underline">
+              Add a valuation
+            </Link>{" "}
+            to count {current.unvaluedHoldings.length === 1 ? "it" : "them"}.
+          </p>
+        )}
       </div>
 
       <section className="mb-8 grid gap-2 rounded-xl border bg-card p-4" aria-labelledby="trend-title">
@@ -149,15 +168,70 @@ export default async function NetWorthPage() {
                 )}
               </tbody>
             </table>
+            {cls === "asset" && current.holdings.length > 0 && (
+              <>
+                <h3 className="mt-4 text-sm font-semibold">Investment holdings</h3>
+                <table className="w-full text-sm">
+                  <thead className="border-b text-left text-xs text-muted-foreground">
+                    <tr>
+                      <th scope="col" className="py-2 pr-2 font-medium">
+                        Holding
+                      </th>
+                      <th scope="col" className="py-2 pr-2 text-right font-medium">
+                        Estimated value
+                      </th>
+                      <th scope="col" className="py-2 text-right font-medium">
+                        In {current.currency}
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y">
+                    {current.holdings.map((h) => (
+                      <tr key={`${h.position.accountId}|${h.asset.id}`}>
+                        <td className="py-2 pr-2">
+                          <Link href={`/investments/assets/${h.asset.id}`} className="hover:underline">
+                            {h.asset.name}
+                          </Link>
+                          <div className="text-xs text-muted-foreground">
+                            {h.valuation.status === "valued"
+                              ? h.valuation.basis === "par"
+                                ? "Par value (assumed)"
+                                : `Manual valuation · ${formatDate(h.valuation.valuedOn)}`
+                              : "Unvalued: not counted"}
+                          </div>
+                        </td>
+                        <td className="py-2 pr-2 text-right">
+                          {h.valuation.status === "valued" ? (
+                            <Amount money={h.valuation.value} colored={false} />
+                          ) : (
+                            <span className="text-muted-foreground">—</span>
+                          )}
+                        </td>
+                        <td className="py-2 text-right">
+                          {h.valuation.status !== "valued" ? (
+                            <span className="text-muted-foreground">—</span>
+                          ) : h.converted ? (
+                            <Amount money={h.converted} colored={false} />
+                          ) : (
+                            <span className="text-xs text-warning">No rate</span>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </>
+            )}
           </section>
         ))}
       </div>
       <p className="mb-8 text-xs text-muted-foreground">
-        Not counted: savings-goal allocations (they earmark money already in these accounts)
+        Investment accounts count their cash above and their holdings at your latest manual valuation, so nothing is
+        counted twice. Not counted: savings-goal allocations (they earmark money already in these accounts)
         {excludedAccounts.length > 0 && (
           <>, and accounts you excluded: {excludedAccounts.map((a) => a.name).join(", ")}</>
         )}
-        . Investment holdings are added in Phase 5.
+        .
       </p>
 
       <section className="grid gap-4 border-t pt-6" aria-labelledby="snap-title">
@@ -187,7 +261,10 @@ export default async function NetWorthPage() {
                     </span>
                     {recalculated && !recalculated.equals(s.netWorth) && (
                       <Badge variant="warning">
-                        records changed since: now <Amount money={recalculated} colored={false} />
+                        {s.methodVersion < NET_WORTH_METHOD_VERSION
+                          ? "made before holdings were counted"
+                          : "records changed since"}
+                        : now <Amount money={recalculated} colored={false} />
                       </Badge>
                     )}
                   </div>

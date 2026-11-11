@@ -11,6 +11,7 @@ test-results/
 *.sql.gz
 .vercel/
 .supabase/
+supabase/.temp/
 *.tsbuildinfo
 next-env.d.ts
 .DS_Store

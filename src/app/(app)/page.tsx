@@ -87,6 +87,12 @@ export default async function DashboardPage({ searchParams }: PageProps<"/">) {
               </dd>
             </div>
             <div>
+              <dt className="text-xs text-muted-foreground">Investments (valued)</dt>
+              <dd>
+                <Amount money={nw.holdingsValue} />
+              </dd>
+            </div>
+            <div>
               <dt className="text-xs text-muted-foreground">Investment accounts (cash)</dt>
               <dd>
                 <Amount money={nw.investmentCash} />
@@ -105,9 +111,16 @@ export default async function DashboardPage({ searchParams }: PageProps<"/">) {
               </dd>
             </div>
           </dl>
-          <p className="text-xs text-muted-foreground">
-            Investment holdings are valued from Phase 5; until then only cash is counted.
-          </p>
+          {nw.unvaluedHoldings.length > 0 && (
+            <p className="text-xs text-warning">
+              {nw.unvaluedHoldings.length} holding{nw.unvaluedHoldings.length === 1 ? "" : "s"} unvalued and not
+              included.{" "}
+              <Link href="/investments" className="underline">
+                Add a valuation
+              </Link>
+              .
+            </p>
+          )}
           <ExcludedNote excluded={nw.unconvertible.map((a) => a.balance)} stale={nw.usedStaleRate} />
         </div>
         <div className="grid content-start gap-1">
@@ -221,10 +234,52 @@ export default async function DashboardPage({ searchParams }: PageProps<"/">) {
           )}
         </Section>
 
-        <Section title="Investments">
-          <p className="text-sm text-muted-foreground">
-            Portfolio valuation arrives in Phase 5, using your own dated manual valuations.
-          </p>
+        <Section title="Investments" href="/investments">
+          {d.portfolio.holdings.length === 0 ? (
+            <p className="text-sm text-muted-foreground">
+              No holdings yet.{" "}
+              <Link href="/investments/assets/new" className="underline">
+                Add an asset
+              </Link>{" "}
+              to start.
+            </p>
+          ) : (
+            <dl className="grid grid-cols-2 gap-2 text-sm">
+              <div>
+                <dt className="text-xs text-muted-foreground">Estimated value</dt>
+                <dd>
+                  <Amount money={d.portfolio.value} colored={false} />
+                </dd>
+              </div>
+              <div>
+                <dt className="text-xs text-muted-foreground">Unrealized</dt>
+                <dd>
+                  <Amount money={d.portfolio.unrealized} sign="always" />
+                </dd>
+              </div>
+              <div>
+                <dt className="text-xs text-muted-foreground">Realized (all time)</dt>
+                <dd>
+                  <Amount money={d.portfolio.realized} sign="always" />
+                </dd>
+              </div>
+              <div>
+                <dt className="text-xs text-muted-foreground">Dividends & interest</dt>
+                <dd>
+                  <Amount money={d.portfolio.income} colored={false} />
+                </dd>
+              </div>
+              <div className="col-span-2">
+                <dt className="sr-only">Valuation basis</dt>
+                <dd className="text-xs text-muted-foreground">
+                  {d.portfolio.oldestValuation
+                    ? `Manual valuations; oldest used ${formatDate(d.portfolio.oldestValuation)}.`
+                    : "Your own valuations, never live prices."}
+                  {d.portfolio.unvalued.length > 0 && ` ${d.portfolio.unvalued.length} unvalued, not included.`}
+                </dd>
+              </div>
+            </dl>
+          )}
         </Section>
 
         <Section title="Recent transactions" href="/transactions">

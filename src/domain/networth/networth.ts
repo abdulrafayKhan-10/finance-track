@@ -1,10 +1,14 @@
 import type { IsoDate } from "../dates";
 import { convert, type ExchangeRate, type RateUsed } from "../fx/fx";
+import { type Holding, type InvestmentData, valueHoldings } from "../investments/portfolio";
 import { accountBalance, type Account, type Posting } from "../ledger";
 import { type CurrencyCode, Money } from "../money";
 
-/** Bumped whenever the calculation changes, so stored snapshots say how they were made. */
-export const NET_WORTH_METHOD_VERSION = 1;
+/**
+ * Bumped whenever the calculation changes, so stored snapshots say how they were made.
+ * 1: account balances only. 2: adds valued investment holdings (Phase 5).
+ */
+export const NET_WORTH_METHOD_VERSION = 2;
 
 export type AccountContribution = {
   accountId: string;
@@ -29,9 +33,17 @@ export type NetWorth = {
   netWorth: Money;
   /** Cash, bank, wallet and savings accounts marked liquid. */
   liquid: Money;
-  /** Cash held in investment accounts (holdings are valued separately, Phase 5). */
+  /** Cash held in investment accounts (holdings are counted separately below). */
   investmentCash: Money;
+  /** Estimated value of valued holdings at the as-of rate. Already part of `assets`. */
+  holdingsValue: Money;
   accounts: AccountContribution[];
+  /** Open positions in included investment accounts, valued or not. */
+  holdings: Holding[];
+  /** Holdings with no valuation on or before asOf: listed, never added (ACC-VAL-1). */
+  unvaluedHoldings: Holding[];
+  /** Valued holdings whose currency has no rate to the reporting currency. */
+  unconvertibleHoldings: Holding[];
   /** Accounts left out of every total because their currency could not be converted. */
   unconvertible: AccountContribution[];
   usedStaleRate: boolean;
@@ -42,6 +54,8 @@ export type NetWorth = {
  * Only accounts marked "include in net worth" count. Each balance is
  * converted at the rate in force on `asOf`; amounts with no rate are listed,
  * never added nominally (INV-6). Goal allocations are not assets (ACC-GOAL-1).
+ * An investment account's ledger lines are its cash only; its holdings are
+ * added separately at their estimated value, so nothing is counted twice (ACC-NW-1).
  */
 export function computeNetWorth(
   accounts: readonly Account[],
@@ -49,6 +63,7 @@ export function computeNetWorth(
   asOf: IsoDate,
   currency: CurrencyCode,
   rates: readonly ExchangeRate[],
+  investments?: InvestmentData,
 ): NetWorth {
   let assets = Money.zero(currency);
   let liabilities = Money.zero(currency);
@@ -87,6 +102,25 @@ export function computeNetWorth(
     }
   }
 
+  const included = new Set(
+    accounts.filter((a) => a.includeInNetWorth && a.openingDate <= asOf && a.class === "asset").map((a) => a.id),
+  );
+  const holdings = investments ? valueHoldings(investments, asOf, currency, rates, (id) => included.has(id)) : [];
+  let holdingsValue = Money.zero(currency);
+  const unvaluedHoldings: Holding[] = [];
+  const unconvertibleHoldings: Holding[] = [];
+  for (const h of holdings) {
+    if (h.valuation.status === "unvalued") {
+      unvaluedHoldings.push(h);
+    } else if (!h.converted) {
+      unconvertibleHoldings.push(h);
+    } else {
+      holdingsValue = holdingsValue.plus(h.converted);
+      usedStaleRate ||= h.rate?.stale ?? false;
+    }
+  }
+  assets = assets.plus(holdingsValue);
+
   return {
     asOf,
     currency,
@@ -95,7 +129,11 @@ export function computeNetWorth(
     netWorth: assets.minus(liabilities),
     liquid,
     investmentCash,
+    holdingsValue,
     accounts: contributions,
+    holdings,
+    unvaluedHoldings,
+    unconvertibleHoldings,
     unconvertible,
     usedStaleRate,
   };
@@ -107,6 +145,7 @@ export function snapshotDetails(nw: NetWorth) {
     method_version: NET_WORTH_METHOD_VERSION,
     liquid: nw.liquid.toStorage(),
     investment_cash: nw.investmentCash.toStorage(),
+    holdings_value: nw.holdingsValue.toStorage(),
     used_stale_rate: nw.usedStaleRate,
     accounts: nw.accounts.map((a) => ({
       account_id: a.accountId,
@@ -120,5 +159,27 @@ export function snapshotDetails(nw: NetWorth) {
         : null,
     })),
     unconvertible: nw.unconvertible.map((a) => a.accountId),
+    positions: nw.holdings.map((h) => ({
+      account_id: h.position.accountId,
+      asset_id: h.asset.id,
+      asset_name: h.asset.name,
+      currency: h.asset.currency,
+      quantity: h.position.quantity.toString(),
+      cost_basis: h.position.costBasis.toStorage(),
+      valuation:
+        h.valuation.status === "valued"
+          ? {
+              basis: h.valuation.basis,
+              unit_price: h.valuation.unitPrice.toString(),
+              valued_on: h.valuation.valuedOn,
+              value: h.valuation.value.toStorage(),
+            }
+          : null,
+      converted: h.valuation.status === "valued" ? (h.converted?.toStorage() ?? null) : null,
+      rate: h.rate
+        ? { rate: h.rate.rate.toString(), effective_on: h.rate.effectiveOn, inverted: h.rate.inverted }
+        : null,
+    })),
+    unvalued_positions: nw.unvaluedHoldings.map((h) => ({ account_id: h.position.accountId, asset_id: h.asset.id })),
   };
 }

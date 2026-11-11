@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { listAccounts } from "@/data/repositories/accounts";
 import { listExchangeRates } from "@/data/repositories/exchange-rates";
+import { listAssets, listMovements, listValuations } from "@/data/repositories/investments";
 import { ledgerLines } from "@/data/repositories/ledger";
 import { getProfile } from "@/data/repositories/profile";
 import { deleteSnapshot, insertSnapshot } from "@/data/repositories/snapshots";
@@ -25,9 +26,19 @@ export async function createSnapshot(_prev: ActionState, formData: FormData): Pr
     const asOf = typeof raw === "string" && raw ? isoDate.safeParse(raw) : { success: true as const, data: today };
     if (!asOf.success) return { fieldErrors: { as_of: "Enter a valid date." } };
     if (asOf.data > today) return { fieldErrors: { as_of: "Snapshots can't be in the future." } };
-    const [accounts, rates] = await Promise.all([listAccounts(), listExchangeRates()]);
+    const [accounts, rates, assets, movements, valuations] = await Promise.all([
+      listAccounts(),
+      listExchangeRates(),
+      listAssets(),
+      listMovements(asOf.data),
+      listValuations(),
+    ]);
     const lines = await ledgerLines(accounts, undefined, asOf.data);
-    const nw = computeNetWorth(accounts, lines, asOf.data, profile.baseCurrency, rates);
+    const nw = computeNetWorth(accounts, lines, asOf.data, profile.baseCurrency, rates, {
+      assets,
+      movements,
+      valuations,
+    });
     await insertSnapshot({
       as_of: asOf.data,
       base_currency: profile.baseCurrency,

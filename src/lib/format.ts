@@ -41,6 +41,18 @@ export function formatDate(date: IsoDate): string {
   return dateFormat.format(new Date(`${date}T00:00:00Z`));
 }
 
+/**
+ * A quantity with grouping and no trailing zeros, e.g. "1,250" or "2.5". Exact:
+ * the decimal string is formatted, never a float. Accepts a decimal.js value.
+ */
+export function formatQuantity(quantity: { toFixed: () => string }): string {
+  const fixed = quantity.toFixed();
+  const negative = fixed.startsWith("-");
+  const [int = "0", frac] = fixed.replace("-", "").split(".");
+  const grouped = int.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+  return `${negative ? "−" : ""}${grouped}${frac ? `.${frac}` : ""}`;
+}
+
 /** A UTC timestamp shown in the user's timezone. */
 export function formatTimestamp(iso: string, timeZone: string): string {
   return new Intl.DateTimeFormat("en-GB", {

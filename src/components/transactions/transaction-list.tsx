@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import type { TransactionView } from "@/features/transactions/queries";
 import { formatDate } from "@/lib/format";
 import { KIND_LABELS } from "@/lib/labels";
+import { cn } from "@/lib/utils";
 
 function Title({ t }: { t: TransactionView }) {
   return <>{t.description || t.payee || KIND_LABELS[t.kind]}</>;
@@ -23,15 +24,17 @@ function Flags({ t }: { t: TransactionView }) {
   );
 }
 
-/** Transfers show the amount moved, without a sign: they are neither income nor spending. */
+/**
+ * Transfers show the amount moved, without a sign: they are neither income nor
+ * spending. Opening holdings and splits move no cash, so they show the quantity.
+ */
 function Headline({ t, className }: { t: TransactionView; className?: string }) {
+  if (!t.headline) return <span className={cn("tabular whitespace-nowrap", className)}>{t.quantityLabel}</span>;
   return (
-    <Amount
-      money={t.headline}
-      sign={t.kind === "transfer" ? "never" : "always"}
-      colored={t.kind !== "transfer"}
-      className={className}
-    />
+    <span className={cn("grid justify-items-end", className)}>
+      <Amount money={t.headline} sign={t.kind === "transfer" ? "never" : "always"} colored={t.kind !== "transfer"} />
+      {t.quantityLabel && <span className="text-xs font-normal text-muted-foreground">{t.quantityLabel}</span>}
+    </span>
   );
 }
 

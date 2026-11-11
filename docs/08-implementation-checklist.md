@@ -31,7 +31,7 @@ Legend: `[x]` done and verified, `[ ]` not started, `[~]` in progress.
 - [x] Auth: password sign-in, TOTP challenge, sign-out, forgot/reset password via `/auth/confirm`, MFA enrol and remove, change password; `src/proxy.ts` refreshes the session, redirects anonymous users and sets a per-request CSP nonce
 - [x] App shell: desktop sidebar, mobile bottom navigation + More page, light/dark/system theme, loading, error and not-found states; module pages say honestly which phase they arrive in
 - [x] CI workflow (`.github/workflows/ci.yml`) and [local development guide](local-development.md)
-- [ ] **Needs you:** create the dev Supabase project and your user, following [local development](local-development.md#supabase-project-setup-dev-now-production-in-phase-8), then sign in once from your PC. Real Supabase Auth has not been exercised yet; the smoke test used a local stand-in
+- [x] **Needs you:** create the dev Supabase project and your user, then sign in once from your PC. Done 2026-11-12: migrations 0001–0009 applied through the SQL Editor (the PC has no IPv6 route to the direct database host), owner signed in against real Supabase Auth
 
 ### Phase 2 deviations from the plan
 
@@ -79,14 +79,23 @@ Legend: `[x]` done and verified, `[ ]` not started, `[~]` in progress.
 - Budgets keep the currency they were created in; changing the reporting currency doesn't convert old budgets.
 - CSV export of reports is part of Phase 6.
 
-## Phase 5: Investment portfolio
+## Phase 5: Investment portfolio — built (2026-11-12), awaiting your check against real Supabase
 
-- [ ] Assets (all 7 categories, per-category details)
-- [ ] Investment transactions (opening holding, buy, sell, dividend, interest, fee, split) + position invariant
-- [ ] WAC engine, realized and unrealized gains, income and fees
-- [ ] Valuations (unit and total entry, history, as-of, par mode)
-- [ ] Portfolio page, allocation, history; net worth includes holdings
-- [ ] Tests: partial and full sells, splits, unvalued handling, double counting
+- [x] Assets (all 7 categories, per-category details): migration 0010; category defaults for unit and decimal places (gold defaults to tola); currency locked once the asset has history; archive, or delete while unused
+- [x] Investment transactions (opening holding, buy, sell, dividend, interest, fee, split) + position invariant: shape rules in the deferred trigger; the running quantity of every (account, asset) position can never go below zero, including after an edit or delete of an earlier buy (`FT008`); archived assets take no new activity (`FT009`)
+- [x] WAC engine, realized and unrealized gains, income and fees (`src/domain/investments`)
+- [x] Valuations (unit price or total value, history, as-of, par mode); a total is divided by the quantity held on its date and the original input is kept
+- [x] Portfolio page, allocation, 12-month history; net worth includes valued holdings (method version 2); dashboard investments card; investment transactions in the transaction list and editable from it
+- [x] Tests: 14 database tests (shapes, oversell, edit/delete breaking a later sale, archived assets, precision, isolation, audit), 21 domain tests (partial and full sells, splits, as-of valuations, unvalued handling, par, double counting, FX), 10 validation tests. INV-5 and INV-9 are now covered
+- [ ] **Needs you:** apply migration 0010 to the dev project, then try an opening holding, a buy, a valuation and a sell
+
+### Phase 5 notes
+
+- `transactions.asset_id` is set on every investment kind (buy, sell and opening holding too, not only dividend, interest, fee and split), so an asset's history is one indexed lookup. All movements of a transaction belong to that asset.
+- `asset_valuations` has no `currency` column: a valuation is always in its asset's currency, which is locked once valuations exist.
+- The cash leg of a same-currency buy or sell is quantity × price ± fee, rounded half-even to the currency's minor units (as a broker rounds). When the cash account uses another currency, the form asks for the amount that actually moved.
+- Snapshots taken before Phase 5 (method version 1) say "made before holdings were counted" when today's recalculation differs.
+- Investment income and gains by period in Reports, and CSV export of holdings, come with the Phase 6 report and export work.
 
 ## Phase 6: UX, CSV and PWA
 

@@ -8,6 +8,8 @@ export const NOTICES = {
   account_deleted: "Account deleted.",
   reconciled: "Reconciliation saved.",
   reconciliation_undone: "Reconciliation removed. Its transactions are unlocked.",
+  asset_saved: "Asset saved.",
+  asset_deleted: "Asset deleted.",
 } as const;
 
 export type NoticeKey = keyof typeof NOTICES;

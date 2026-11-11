@@ -151,6 +151,17 @@ All of these are `SECURITY INVOKER`, so RLS applies, with `set search_path = ''`
 
 Snapshots are inserted directly into `net_worth_snapshots` (a single row): the server computes them with `computeNetWorth` and stores every input in `details`. The table has no update grant, and a check ensures `net_worth = total_assets − total_liabilities`.
 
+**Built (Phase 5, migration 0010):**
+
+| Function                                               | Purpose                                                                                                                                                                                                 |
+| ------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `create_transaction` / `update_transaction` (replaced) | Also take `asset_id` and `movements: [{account_id, quantity, unit_price?, fee?, cost_amount?}]`; quantities beyond the asset's decimal places are refused (`FT001`); archived assets refused (`FT009`). |
+| `delete_transaction` (replaced)                        | Reports a broken later sale (`FT008`) from the call itself.                                                                                                                                             |
+| `list_transactions` (replaced)                         | Returns `asset_id` and `movements`; the account filter matches holdings too; new `asset_id` filter.                                                                                                     |
+| `holding_movements_list(to)` / `asset_cash_lines(to)`  | Plain movements in ledger order, and the cash lines of transactions about an asset, for the domain's WAC engine and portfolio.                                                                          |
+
+Error codes added: `FT008` position would go below zero, `FT009` asset archived.
+
 **Planned:**
 
 | Function                                                     | Purpose                                                                            |
@@ -180,7 +191,7 @@ Migrations live in `supabase/migrations/` (timestamp-prefixed filenames, numbere
 7. `0007_budgets_goals.sql` (built): budgets (top-level expense categories or overall), `copy_budgets`, savings goals, append-only goal allocations with a non-negative total.
 8. `0008_exchange_rates.sql` (built): dated exchange rates.
 9. `0009_net_worth_snapshots.sql` (built): immutable snapshots and `ledger_lines`.
-10. `0010_investments.sql`: assets, valuations, holding movements, position invariant, investment RPC branches.
+10. `0010_investments.sql` (built): assets, valuations, holding movements, position invariant, investment RPC branches.
 11. `0011_imports_backup.sql`: import batches, restore, delete-my-data.
 
 Every migration ships with SQL tests (RLS and invariants) in the same PR. Types are regenerated after each schema change.

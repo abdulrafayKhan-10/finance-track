@@ -1,7 +1,7 @@
 import "server-only";
 import type { IsoDate } from "@/domain/dates";
 import type { Account, Posting, TransactionKind, TransactionStatus } from "@/domain/ledger";
-import { Money } from "@/domain/money";
+import { type Dec, dec, Money } from "@/domain/money";
 import { DataError, throwIfError } from "@/lib/errors";
 import type { TransactionFilterPayload, TransactionListPayload, TransactionPayload } from "../supabase/database.types";
 import { createClient } from "../supabase/server";
@@ -12,6 +12,16 @@ export type TransactionLineRecord = {
   amount: Money;
   categoryId: string | null;
   memo: string | null;
+};
+
+export type MovementRecord = {
+  id: string;
+  accountId: string;
+  assetId: string;
+  quantity: Dec;
+  unitPrice: Dec | null;
+  fee: Dec;
+  costAmount: Dec | null;
 };
 
 export type TransactionRecord = {
@@ -25,10 +35,13 @@ export type TransactionRecord = {
   status: TransactionStatus;
   refundOfId: string | null;
   reconciliationId: string | null;
+  /** The asset an investment transaction is about. */
+  assetId: string | null;
   createdAt: string;
   /** Opaque version token for optimistic concurrency; pass back unchanged. */
   updatedAt: string;
   lines: TransactionLineRecord[];
+  movements: MovementRecord[];
 };
 
 export type Cursor = NonNullable<TransactionFilterPayload["cursor"]>;
@@ -58,6 +71,7 @@ function toRecord(
     status: item.status,
     refundOfId: item.refund_of_id,
     reconciliationId: item.reconciliation_id,
+    assetId: item.asset_id ?? null,
     createdAt: item.created_at,
     updatedAt: item.updated_at,
     lines: item.lines.map((l) => ({
@@ -66,6 +80,15 @@ function toRecord(
       amount: Money.of(l.amount, currencyOf(l.account_id)),
       categoryId: l.category_id,
       memo: l.memo,
+    })),
+    movements: (item.movements ?? []).map((m) => ({
+      id: m.id,
+      accountId: m.account_id,
+      assetId: m.asset_id,
+      quantity: dec(m.quantity),
+      unitPrice: m.unit_price === null ? null : dec(m.unit_price),
+      fee: dec(m.fee),
+      costAmount: m.cost_amount === null ? null : dec(m.cost_amount),
     })),
   };
 }

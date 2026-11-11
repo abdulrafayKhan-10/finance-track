@@ -5,6 +5,7 @@
  * keep in sync with supabase/migrations. Numeric columns are always selected
  * as text (`amount::text`) so they are typed as string here.
  */
+import type { AssetCategory, AssetStatus, ValuationMode } from "@/domain/investments/types";
 import type { AccountStatus, AccountType, TransactionKind, TransactionStatus } from "@/domain/ledger/types";
 
 export type ThemePreference = "system" | "light" | "dark";
@@ -133,6 +134,39 @@ export type SnapshotRow = {
   created_at: string;
 };
 
+export type AssetRow = {
+  id: string;
+  user_id: string;
+  name: string;
+  symbol: string | null;
+  category: AssetCategory;
+  currency: string;
+  quantity_scale: number;
+  unit_label: string;
+  valuation_mode: ValuationMode;
+  details: Record<string, unknown>;
+  price_source: "manual";
+  status: AssetStatus;
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type AssetValuationRow = {
+  id: string;
+  user_id: string;
+  asset_id: string;
+  valued_on: string;
+  unit_price: string;
+  entered_as: "unit_price" | "total_value";
+  entered_total: string | null;
+  quantity_at_entry: string | null;
+  source: "manual" | "import" | "provider";
+  source_note: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
 export type ProfileRow = {
   user_id: string;
   display_name: string | null;
@@ -190,6 +224,32 @@ export type Database = {
         Partial<Pick<ExchangeRateRow, "rate" | "effective_on" | "source_note">>
       >;
       net_worth_snapshots: Table<SnapshotRow, Omit<SnapshotRow, "id" | "user_id" | "created_at">, never>;
+      assets: Table<
+        AssetRow,
+        Pick<AssetRow, "name" | "category" | "currency" | "quantity_scale" | "unit_label" | "valuation_mode"> &
+          Partial<Pick<AssetRow, "symbol" | "details" | "notes" | "status">>,
+        Partial<
+          Pick<
+            AssetRow,
+            | "name"
+            | "symbol"
+            | "category"
+            | "currency"
+            | "quantity_scale"
+            | "unit_label"
+            | "valuation_mode"
+            | "details"
+            | "notes"
+            | "status"
+          >
+        >
+      >;
+      asset_valuations: Table<
+        AssetValuationRow,
+        Pick<AssetValuationRow, "asset_id" | "valued_on" | "unit_price" | "entered_as"> &
+          Partial<Pick<AssetValuationRow, "entered_total" | "quantity_at_entry" | "source_note">>,
+        never
+      >;
     };
     Views: Record<never, never>;
     Functions: {
@@ -252,6 +312,33 @@ export type Database = {
           kind: TransactionKind;
         }[];
       };
+      holding_movements_list: {
+        Args: { p_to?: string | null };
+        Returns: {
+          id: string;
+          transaction_id: string;
+          account_id: string;
+          asset_id: string;
+          kind: TransactionKind;
+          occurred_on: string;
+          created_at: string;
+          quantity: string;
+          unit_price: string | null;
+          fee: string;
+          cost_amount: string | null;
+        }[];
+      };
+      asset_cash_lines: {
+        Args: { p_to?: string | null };
+        Returns: {
+          transaction_id: string;
+          asset_id: string;
+          kind: TransactionKind;
+          occurred_on: string;
+          account_id: string;
+          amount: string;
+        }[];
+      };
     };
     Enums: Record<never, never>;
     CompositeTypes: Record<never, never>;
@@ -268,12 +355,24 @@ export type TransactionPayload = {
   status: TransactionStatus;
   refund_of_id: string | null;
   lines: { account_id: string; amount: string; category_id: string | null; memo?: string | null }[];
+  /** Investment transactions only: the asset, and its holding movements. */
+  asset_id?: string | null;
+  movements?: MovementPayload[];
+};
+
+export type MovementPayload = {
+  account_id: string;
+  quantity: string;
+  unit_price?: string | null;
+  fee?: string;
+  cost_amount?: string | null;
 };
 
 export type TransactionFilterPayload = {
   id?: string;
   account_id?: string;
   category_id?: string;
+  asset_id?: string;
   kinds?: TransactionKind[];
   status?: TransactionStatus;
   from?: string;
@@ -296,9 +395,19 @@ export type TransactionListPayload = {
     status: TransactionStatus;
     refund_of_id: string | null;
     reconciliation_id: string | null;
+    asset_id: string | null;
     created_at: string;
     updated_at: string;
     lines: { id: string; account_id: string; amount: string; category_id: string | null; memo: string | null }[];
+    movements: {
+      id: string;
+      account_id: string;
+      asset_id: string;
+      quantity: string;
+      unit_price: string | null;
+      fee: string;
+      cost_amount: string | null;
+    }[];
   }[];
   has_more: boolean;
 };

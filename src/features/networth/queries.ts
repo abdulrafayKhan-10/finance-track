@@ -6,7 +6,9 @@ import type { Account, LedgerLine } from "@/domain/ledger";
 import { computeNetWorth, type NetWorth } from "@/domain/networth/networth";
 import type { CurrencyCode } from "@/domain/money";
 import type { ExchangeRate } from "@/domain/fx/fx";
+import type { InvestmentData } from "@/domain/investments";
 import { loadFinanceContext } from "../finance-context";
+import { loadInvestments } from "../investments/queries";
 
 export type TrendPoint = { date: IsoDate; netWorth: NetWorth; snapshot: Snapshot | null };
 
@@ -19,6 +21,7 @@ export function netWorthTrend(
   rates: readonly ExchangeRate[],
   snapshots: readonly Snapshot[],
   months = 12,
+  investments?: InvestmentData,
 ): TrendPoint[] {
   const current = monthOf(today);
   const earliest = accounts.reduce<IsoDate | null>(
@@ -32,7 +35,7 @@ export function netWorthTrend(
     if (earliest === null || date < earliest) continue;
     points.push({
       date,
-      netWorth: computeNetWorth(accounts, lines, date, currency, rates),
+      netWorth: computeNetWorth(accounts, lines, date, currency, rates, investments),
       snapshot: snapshots.find((s) => s.asOf === date) ?? null,
     });
   }
@@ -41,12 +44,16 @@ export function netWorthTrend(
 
 export async function getNetWorthPage() {
   const ctx = await loadFinanceContext();
-  const [lines, snapshots] = await Promise.all([ledgerLines(ctx.accounts), listSnapshots()]);
+  const [lines, snapshots, investments] = await Promise.all([
+    ledgerLines(ctx.accounts),
+    listSnapshots(),
+    loadInvestments(),
+  ]);
   const currency = ctx.profile.baseCurrency;
   return {
     ctx,
-    current: computeNetWorth(ctx.accounts, lines, ctx.today, currency, ctx.rates),
-    trend: netWorthTrend(ctx.accounts, lines, ctx.today, currency, ctx.rates, snapshots, 24),
+    current: computeNetWorth(ctx.accounts, lines, ctx.today, currency, ctx.rates, investments),
+    trend: netWorthTrend(ctx.accounts, lines, ctx.today, currency, ctx.rates, snapshots, 24, investments),
     snapshots,
     lines,
   };
