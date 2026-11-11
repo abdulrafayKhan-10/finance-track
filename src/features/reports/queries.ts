@@ -4,7 +4,9 @@ import { ledgerLines } from "@/data/repositories/ledger";
 import { budgetStatuses } from "@/domain/budgets/budgets";
 import { type IsoMonth, monthOf, type Period } from "@/domain/dates";
 import { monthlyCashFlow, spendingByCategory, yearlyTotals } from "@/domain/reports/reports";
+import { investmentMonths } from "@/domain/investments";
 import { loadFinanceContext } from "../finance-context";
+import { loadInvestments } from "../investments/queries";
 
 export async function getMonthlyReport(year: string) {
   const ctx = await loadFinanceContext();
@@ -29,6 +31,14 @@ export async function getBudgetReport(year: string) {
   ]);
   const statuses = budgetStatuses(budgets, lines, ctx.parents, ctx.rates);
   return { ctx, statuses };
+}
+
+/** Dividends and interest, realized gains and fees per month of a year. */
+export async function getInvestmentReport(year: string) {
+  const [ctx, inv] = await Promise.all([loadFinanceContext(), loadInvestments()]);
+  const last: IsoMonth = year === ctx.today.slice(0, 4) ? monthOf(ctx.today) : `${year}-12`;
+  const months = investmentMonths(inv, inv.cashLines, `${year}-01`, last, ctx.profile.baseCurrency, ctx.rates);
+  return { ctx, months };
 }
 
 export async function getYearlyReport() {

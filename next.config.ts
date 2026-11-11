@@ -14,6 +14,10 @@ const nextConfig: NextConfig = {
   // (the CSP nonce requires it too), so the Cache Components model is off.
   cacheComponents: false,
   poweredByHeader: false,
+  experimental: {
+    // Restoring a JSON backup sends the whole file to a server action (the app caps it at 10 MB).
+    serverActions: { bodySizeLimit: "11mb" },
+  },
   async headers() {
     return [{ source: "/:path*", headers: securityHeaders }];
   },

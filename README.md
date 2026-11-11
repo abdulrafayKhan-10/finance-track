@@ -2,7 +2,7 @@
 
 A private personal finance and investment tracker for a single user. It uses manual entry, PKR as the default currency and Asia/Karachi as the timezone, and keeps data in a private cloud database synchronized between PC and phone.
 
-**Status:** Phase 5 built: accounts, transactions, reconciliation, exchange rates, budgets, savings goals, net worth with snapshots, reports, the dashboard, and the investment portfolio (assets, buy/sell/dividend/split, weighted-average cost, manual valuations). CSV, backup and PWA come next (Phase 6).
+**Status:** Phase 6 built: accounts, transactions, reconciliation, exchange rates, budgets, savings goals, net worth with snapshots, reports, the dashboard, the investment portfolio, CSV import and export, JSON backup and restore, account deletion, and an installable app (PWA). Security and release verification come next (Phase 7).
 
 Getting started: see [local development](docs/local-development.md).
 

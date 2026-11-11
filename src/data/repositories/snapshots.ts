@@ -2,6 +2,7 @@ import "server-only";
 import { isCurrencyCode, Money } from "@/domain/money";
 import { DataError, throwIfError } from "@/lib/errors";
 import type { Database, SnapshotRow } from "../supabase/database.types";
+import { fetchAll } from "../supabase/paging";
 import { createClient } from "../supabase/server";
 
 export type Snapshot = {
@@ -17,12 +18,16 @@ export type Snapshot = {
 
 export async function listSnapshots(): Promise<Snapshot[]> {
   const supabase = await createClient();
-  const { data, error } = await supabase
-    .from("net_worth_snapshots")
-    .select(
-      "id, user_id, as_of, base_currency, total_assets::text, total_liabilities::text, net_worth::text, method_version, details, created_at",
-    )
-    .order("as_of", { ascending: false });
+  const { data, error } = await fetchAll((a, b) =>
+    supabase
+      .from("net_worth_snapshots")
+      .select(
+        "id, user_id, as_of, base_currency, total_assets::text, total_liabilities::text, net_worth::text, method_version, details, created_at",
+      )
+      .order("as_of", { ascending: false })
+      .order("id")
+      .range(a, b),
+  );
   throwIfError(error);
   return (data as unknown as SnapshotRow[]).flatMap((r) =>
     isCurrencyCode(r.base_currency)

@@ -5,6 +5,7 @@ import type { Account } from "@/domain/ledger";
 import { dec, isCurrencyCode, Money } from "@/domain/money";
 import { DataError, throwIfError } from "@/lib/errors";
 import type { AssetRow, AssetValuationRow, Database } from "../supabase/database.types";
+import { fetchAll } from "../supabase/paging";
 import { createClient } from "../supabase/server";
 
 export type AssetRecord = Asset & {
@@ -67,12 +68,16 @@ export async function deleteAsset(id: string): Promise<void> {
 
 export async function listValuations(): Promise<Valuation[]> {
   const supabase = await createClient();
-  const { data, error } = await supabase
-    .from("asset_valuations")
-    .select(
-      "id, user_id, asset_id, valued_on, unit_price::text, entered_as, entered_total::text, quantity_at_entry::text, source, source_note, created_at, updated_at",
-    )
-    .order("valued_on", { ascending: false });
+  const { data, error } = await fetchAll((a, b) =>
+    supabase
+      .from("asset_valuations")
+      .select(
+        "id, user_id, asset_id, valued_on, unit_price::text, entered_as, entered_total::text, quantity_at_entry::text, source, source_note, created_at, updated_at",
+      )
+      .order("valued_on", { ascending: false })
+      .order("id")
+      .range(a, b),
+  );
   throwIfError(error);
   return ((data ?? []) as unknown as AssetValuationRow[]).map((r) => ({
     id: r.id,
@@ -105,7 +110,9 @@ export async function deleteValuation(id: string): Promise<void> {
 
 export async function listMovements(to?: IsoDate): Promise<HoldingMovement[]> {
   const supabase = await createClient();
-  const { data, error } = await supabase.rpc("holding_movements_list", { p_to: to ?? null });
+  const { data, error } = await fetchAll((a, b) =>
+    supabase.rpc("holding_movements_list", { p_to: to ?? null }).range(a, b),
+  );
   throwIfError(error);
   return (data ?? []).map((r) => ({
     id: r.id,
@@ -125,7 +132,7 @@ export async function listMovements(to?: IsoDate): Promise<HoldingMovement[]> {
 export async function listAssetCashLines(accounts: readonly Account[], to?: IsoDate): Promise<AssetCashLine[]> {
   const supabase = await createClient();
   const currencyOf = new Map(accounts.map((a) => [a.id, a.currency]));
-  const { data, error } = await supabase.rpc("asset_cash_lines", { p_to: to ?? null });
+  const { data, error } = await fetchAll((a, b) => supabase.rpc("asset_cash_lines", { p_to: to ?? null }).range(a, b));
   throwIfError(error);
   return (data ?? []).flatMap((r) => {
     const currency = currencyOf.get(r.account_id);

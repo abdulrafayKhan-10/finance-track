@@ -4,6 +4,7 @@ import type { Account, Posting, TransactionKind, TransactionStatus } from "@/dom
 import { type Dec, dec, Money } from "@/domain/money";
 import { DataError, throwIfError } from "@/lib/errors";
 import type { TransactionFilterPayload, TransactionListPayload, TransactionPayload } from "../supabase/database.types";
+import { fetchAll } from "../supabase/paging";
 import { createClient } from "../supabase/server";
 
 export type TransactionLineRecord = {
@@ -164,7 +165,9 @@ export type AccountPosting = Posting & {
 /** Every posting on one account in ledger order (oldest first). */
 export async function accountPostings(account: Account): Promise<AccountPosting[]> {
   const supabase = await createClient();
-  const { data, error } = await supabase.rpc("account_postings", { p_account_id: account.id });
+  const { data, error } = await fetchAll((a, b) =>
+    supabase.rpc("account_postings", { p_account_id: account.id }).range(a, b),
+  );
   throwIfError(error);
   return (data ?? []).map((r) => ({
     transactionId: r.transaction_id,

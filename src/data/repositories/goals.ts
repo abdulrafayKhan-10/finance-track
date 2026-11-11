@@ -3,6 +3,7 @@ import type { Allocation, Goal } from "@/domain/goals/goals";
 import { isCurrencyCode, Money } from "@/domain/money";
 import { DataError, throwIfError } from "@/lib/errors";
 import type { AllocationRow, Database, GoalRow } from "../supabase/database.types";
+import { fetchAll } from "../supabase/paging";
 import { createClient } from "../supabase/server";
 
 export type GoalRecord = Goal & { description: string | null; completedOn: string | null; createdAt: string };
@@ -68,13 +69,16 @@ export async function deleteGoal(id: string): Promise<void> {
 /** All allocations (optionally for one goal), oldest first, in each goal's currency. */
 export async function listAllocations(goals: readonly GoalRecord[], goalId?: string): Promise<AllocationRecord[]> {
   const supabase = await createClient();
-  let query = supabase
-    .from("goal_allocations")
-    .select("id, user_id, goal_id, allocated_on, amount::text, source_account_id, note, created_at")
-    .order("allocated_on")
-    .order("created_at");
-  if (goalId) query = query.eq("goal_id", goalId);
-  const { data, error } = await query;
+  const { data, error } = await fetchAll((a, b) => {
+    let query = supabase
+      .from("goal_allocations")
+      .select("id, user_id, goal_id, allocated_on, amount::text, source_account_id, note, created_at")
+      .order("allocated_on")
+      .order("created_at")
+      .order("id");
+    if (goalId) query = query.eq("goal_id", goalId);
+    return query.range(a, b);
+  });
   throwIfError(error);
   const currencyOf = new Map(goals.map((g) => [g.id, g.target.currency]));
   return (data as unknown as AllocationRow[]).flatMap((r) => {

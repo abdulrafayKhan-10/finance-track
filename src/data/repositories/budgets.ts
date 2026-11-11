@@ -4,17 +4,22 @@ import { type IsoMonth, firstDay } from "@/domain/dates";
 import { isCurrencyCode, Money } from "@/domain/money";
 import { DataError, throwIfError } from "@/lib/errors";
 import type { BudgetRow } from "../supabase/database.types";
+import { fetchAll } from "../supabase/paging";
 import { createClient } from "../supabase/server";
 
 /** Budgets for the months from `from` to `to` inclusive. */
 export async function listBudgets(from: IsoMonth, to: IsoMonth): Promise<Budget[]> {
   const supabase = await createClient();
-  const { data, error } = await supabase
-    .from("budgets")
-    .select("id, user_id, month, category_id, amount::text, currency, created_at, updated_at")
-    .gte("month", firstDay(from))
-    .lte("month", firstDay(to))
-    .order("month");
+  const { data, error } = await fetchAll((a, b) =>
+    supabase
+      .from("budgets")
+      .select("id, user_id, month, category_id, amount::text, currency, created_at, updated_at")
+      .gte("month", firstDay(from))
+      .lte("month", firstDay(to))
+      .order("month")
+      .order("id")
+      .range(a, b),
+  );
   throwIfError(error);
   return (data as unknown as BudgetRow[]).flatMap((r) =>
     isCurrencyCode(r.currency)

@@ -97,12 +97,23 @@ Legend: `[x]` done and verified, `[ ]` not started, `[~]` in progress.
 - Snapshots taken before Phase 5 (method version 1) say "made before holdings were counted" when today's recalculation differs.
 - Investment income and gains by period in Reports, and CSV export of holdings, come with the Phase 6 report and export work.
 
-## Phase 6: UX, CSV and PWA
+## Phase 6: UX, CSV and PWA — built (2026-11-12), awaiting your check against real Supabase
 
-- [ ] CSV import wizard (mapping, validation, duplicates, all-or-nothing, undo batch)
-- [ ] CSV exports (all entities + reports); JSON backup; restore + round-trip test
-- [ ] Responsive polish, charts on mobile, accessibility pass
-- [ ] Manifest, icons, service worker (static-only caching), offline page
+- [x] CSV import wizard (`/transactions/import`): column mapping with guesses from the header, three date orders and named months, one signed amount column or money-out/money-in columns, sign flip, category matching by name (else Uncategorized), every row checked before saving, duplicate flags (imported before, same date and amount, repeated in file) start unticked, all-or-nothing commit (migration 0011, `FT010` with failing rows), undo a whole batch (type UNDO)
+- [x] CSV exports of every entity (Settings → Data) and every report (Reports, incl. the new Investments tab); filtered transaction export from the Transactions page; formula injection neutralized
+- [x] JSON backup (every table with ids, read page by page) and restore into an empty account in one transaction; system categories remapped; round-trip database test compares every row and the derived balances and positions
+- [x] Delete all my data (type DELETE) and delete account (email + password re-check; needs `SUPABASE_SECRET_KEY`)
+- [~] Responsive polish, charts on mobile, accessibility pass: new screens are built mobile-first with labelled controls; a signed-in browser pass on phone and desktop is still to do (Phase 7 E2E)
+- [x] Manifest, generated icons (`scripts/generate-icons.mjs`), service worker (static files and the offline page only; navigations network-only; caches cleared on sign-out), offline page
+- [x] Fix: every list that grows with history (ledger lines, postings, movements, valuations, rates, budgets, allocations, snapshots, exports) is read page by page; before, Supabase's 1,000-row limit would have silently cut figures short
+- [ ] **Needs you:** apply migration 0011, then try an import, a backup download, and the Data page
+
+### Phase 6 notes
+
+- The CSV parser is a small in-house RFC 4180 implementation (`src/lib/csv`) instead of `papaparse`: one less dependency, and it is unit-tested for quotes, line breaks, BOMs and `;`/tab separators.
+- Imports create income and expense only; transfers are entered by hand. Imported rows get the tag `imported`.
+- Restore keeps every id, so a backup can't be restored into a second account of the same database while the original records still exist (refused with a clear message).
+- Server-action bodies may be up to 11 MB (for backup restores; the app caps files at 10 MB).
 
 ## Phase 7: Security and release verification
 

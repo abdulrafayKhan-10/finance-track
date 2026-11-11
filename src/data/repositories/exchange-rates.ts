@@ -3,18 +3,23 @@ import type { ExchangeRate } from "@/domain/fx/fx";
 import { dec, isCurrencyCode } from "@/domain/money";
 import { DataError, throwIfError } from "@/lib/errors";
 import type { Database, ExchangeRateRow } from "../supabase/database.types";
+import { fetchAll } from "../supabase/paging";
 import { createClient } from "../supabase/server";
 
 export type ExchangeRateRecord = ExchangeRate & { id: string; sourceNote: string | null };
 
 export async function listExchangeRates(): Promise<ExchangeRateRecord[]> {
   const supabase = await createClient();
-  const { data, error } = await supabase
-    .from("exchange_rates")
-    .select("id, user_id, base, quote, rate::text, effective_on, source_note, created_at, updated_at")
-    .order("effective_on", { ascending: false })
-    .order("base")
-    .order("quote");
+  const { data, error } = await fetchAll((a, b) =>
+    supabase
+      .from("exchange_rates")
+      .select("id, user_id, base, quote, rate::text, effective_on, source_note, created_at, updated_at")
+      .order("effective_on", { ascending: false })
+      .order("base")
+      .order("quote")
+      .order("id")
+      .range(a, b),
+  );
   throwIfError(error);
   return (data as unknown as ExchangeRateRow[]).flatMap((r) =>
     isCurrencyCode(r.base) && isCurrencyCode(r.quote)

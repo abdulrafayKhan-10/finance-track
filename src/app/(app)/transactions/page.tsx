@@ -33,17 +33,34 @@ export default async function TransactionsPage({ searchParams }: PageProps<"/tra
     return `/transactions?${qs.toString()}`;
   })();
   const filtered = Object.entries(search).some(([k, v]) => k !== "order" && k !== "cursor" && v);
+  // The export uses the same filters as the list (all pages).
+  const exportHref = (() => {
+    const qs = new URLSearchParams();
+    for (const [k, v] of Object.entries(search)) if (v && k !== "cursor") qs.set(k, String(v));
+    const s = qs.toString();
+    return `/export/transactions${s ? `?${s}` : ""}`;
+  })();
 
   return (
     <>
       <div className="flex flex-wrap items-start justify-between gap-3">
         <PageHeader title="Transactions" description="Income, expenses, transfers, refunds and adjustments." />
         {page.accounts.length > 0 && (
-          <Button asChild>
-            <Link href="/transactions/new">
-              <Plus aria-hidden /> New transaction
-            </Link>
-          </Button>
+          <div className="flex flex-wrap gap-2">
+            <Button asChild variant="outline">
+              <Link href="/transactions/import">Import CSV</Link>
+            </Button>
+            <Button asChild variant="outline">
+              <a href={exportHref} download>
+                Export CSV
+              </a>
+            </Button>
+            <Button asChild>
+              <Link href="/transactions/new">
+                <Plus aria-hidden /> New transaction
+              </Link>
+            </Button>
+          </div>
         )}
       </div>
       <Notice value={params.notice} />

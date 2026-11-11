@@ -1,3 +1,4 @@
+import { Download } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { PageHeader } from "@/components/app-shell/page-header";
@@ -10,7 +11,14 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { firstDay, isIsoDate, lastDay, monthOf } from "@/domain/dates";
 import { loadFinanceContext } from "@/features/finance-context";
-import { getBudgetReport, getCategoryReport, getMonthlyReport, getYearlyReport } from "@/features/reports/queries";
+import { Money } from "@/domain/money";
+import {
+  getBudgetReport,
+  getCategoryReport,
+  getInvestmentReport,
+  getMonthlyReport,
+  getYearlyReport,
+} from "@/features/reports/queries";
 import { requireUser } from "@/lib/auth";
 import { formatDate, formatMoney, formatMonthLong, formatMonthShort, formatPercent } from "@/lib/format";
 import { cn } from "@/lib/utils";
@@ -22,6 +30,7 @@ const TABS = [
   { key: "categories", label: "Categories" },
   { key: "budgets", label: "Budgets" },
   { key: "yearly", label: "Yearly" },
+  { key: "investments", label: "Investments" },
 ] as const;
 type Tab = (typeof TABS)[number]["key"];
 
@@ -295,6 +304,80 @@ async function Yearly() {
   );
 }
 
+async function Investments({ year, current }: { year: number; current: number }) {
+  const { months } = await getInvestmentReport(String(year));
+  const currency = months[0]?.income.currency;
+  const sum = (pick: (m: (typeof months)[number]) => Money) =>
+    currency ? Money.sum(months.map(pick), currency) : null;
+  const totals = { income: sum((m) => m.income), realized: sum((m) => m.realized), fees: sum((m) => m.fees) };
+  return (
+    <>
+      <YearNav tab="investments" year={year} current={current} />
+      <p className="mb-4 max-w-2xl text-sm text-muted-foreground">
+        Dividends and interest count as income (they are in the savings rate). Realized gains come from sales and are
+        kept apart from unrealized gains, which are on the Investments page.
+      </p>
+      <div className="overflow-x-auto">
+        <table className="w-full min-w-[32rem] text-sm">
+          <thead className="border-b text-left text-xs text-muted-foreground">
+            <tr>
+              <th scope="col" className="py-2 pr-3 font-medium">
+                Month
+              </th>
+              <th scope="col" className="py-2 pr-3 text-right font-medium">
+                Dividends & interest
+              </th>
+              <th scope="col" className="py-2 pr-3 text-right font-medium">
+                Realized gain
+              </th>
+              <th scope="col" className="py-2 text-right font-medium">
+                Fees
+              </th>
+            </tr>
+          </thead>
+          <tbody className="divide-y">
+            {months.map((m) => (
+              <tr key={m.month}>
+                <td className="py-2 pr-3">{formatMonthLong(m.month)}</td>
+                <td className="py-2 pr-3 text-right">
+                  <Amount money={m.income} colored={false} />
+                </td>
+                <td className="py-2 pr-3 text-right">
+                  <Amount money={m.realized} sign="always" />
+                </td>
+                <td className="py-2 text-right">
+                  <Amount money={m.fees} colored={false} />
+                </td>
+              </tr>
+            ))}
+          </tbody>
+          {totals.income && totals.realized && totals.fees && (
+            <tfoot className="border-t font-medium">
+              <tr>
+                <th scope="row" className="py-2 pr-3 text-left">
+                  {year}
+                </th>
+                <td className="py-2 pr-3 text-right">
+                  <Amount money={totals.income} colored={false} />
+                </td>
+                <td className="py-2 pr-3 text-right">
+                  <Amount money={totals.realized} sign="always" />
+                </td>
+                <td className="py-2 text-right">
+                  <Amount money={totals.fees} colored={false} />
+                </td>
+              </tr>
+            </tfoot>
+          )}
+        </table>
+      </div>
+      <div className="mt-3">
+        <ExcludedNote excluded={months.flatMap((m) => m.excluded)} />
+      </div>
+    </>
+  );
+}
+
 export default async function ReportsPage({ searchParams }: PageProps<"/reports">) {
   await requireUser();
   const ctx = await loadFinanceContext();
@@ -334,7 +417,22 @@ export default async function ReportsPage({ searchParams }: PageProps<"/reports"
       {tab === "categories" && <Categories from={from} to={to} />}
       {tab === "budgets" && <Budgets year={year} current={current} />}
       {tab === "yearly" && <Yearly />}
-      <p className="mt-8 text-xs text-muted-foreground">CSV export of reports arrives in Phase 6.</p>
+      {tab === "investments" && <Investments year={year} current={current} />}
+      <p className="mt-8">
+        <a
+          href={
+            tab === "categories"
+              ? `/export/report-categories?from=${from}&to=${to}`
+              : tab === "yearly"
+                ? "/export/report-yearly"
+                : `/export/report-${tab}?year=${year}`
+          }
+          download
+          className="inline-flex items-center gap-1 text-sm text-primary hover:underline"
+        >
+          <Download className="size-4" aria-hidden /> Export this report as CSV
+        </a>
+      </p>
     </>
   );
 }

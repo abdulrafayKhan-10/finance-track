@@ -25,6 +25,7 @@ export default async function LoginPage({ searchParams }: PageProps<"/login">) {
       </CardHeader>
       <CardContent className="grid gap-4">
         {params.error === "link" && <FormMessage error={LINK_ERROR} />}
+        {params.deleted === "1" && <FormMessage success="Your account and all its data were deleted." />}
         <LoginForm action={signIn} next={next} />
       </CardContent>
     </Card>

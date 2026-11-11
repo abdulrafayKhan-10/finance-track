@@ -1,7 +1,6 @@
-import { ArrowRightLeft, ChevronRight, ShieldCheck, Tags, UserRound } from "lucide-react";
+import { ArrowRightLeft, ChevronRight, Database, ShieldCheck, Tags, UserRound } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
-import { NotBuiltYet } from "@/components/app-shell/not-built-yet";
 import { PageHeader } from "@/components/app-shell/page-header";
 import { ThemeToggle } from "@/components/app-shell/theme-toggle";
 import { requireUser } from "@/lib/auth";
@@ -18,6 +17,12 @@ const LINKS = [
     text: "Your dated rates for converting other currencies",
   },
   { href: "/settings/security", icon: ShieldCheck, title: "Security", text: "Password and two-factor authentication" },
+  {
+    href: "/settings/data",
+    icon: Database,
+    title: "Data",
+    text: "Export, backup, restore and account deletion",
+  },
 ];
 
 export default async function SettingsPage() {
@@ -42,7 +47,6 @@ export default async function SettingsPage() {
             <ThemeToggle />
           </div>
         </div>
-        <NotBuiltYet phase={6} features={["Data export, backup, restore and account deletion"]} />
       </div>
     </>
   );

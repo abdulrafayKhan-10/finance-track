@@ -244,6 +244,25 @@ export type Database = {
           >
         >
       >;
+      // Written only through RPCs; read directly for import duplicate checks.
+      transactions: Table<
+        { id: string; occurred_on: string; import_batch_id: string | null; import_fingerprint: string | null },
+        never,
+        never
+      >;
+      import_batches: Table<
+        {
+          id: string;
+          user_id: string;
+          kind: "transactions_csv" | "backup_restore";
+          file_name: string | null;
+          row_count: number;
+          summary: Record<string, unknown>;
+          created_at: string;
+        },
+        never,
+        never
+      >;
       asset_valuations: Table<
         AssetValuationRow,
         Pick<AssetValuationRow, "asset_id" | "valued_on" | "unit_price" | "entered_as"> &
@@ -328,6 +347,19 @@ export type Database = {
           cost_amount: string | null;
         }[];
       };
+      import_transactions: {
+        Args: {
+          p: {
+            file_name: string;
+            summary: Record<string, string | number>;
+            rows: (TransactionPayload & { import_fingerprint: string | null })[];
+          };
+        };
+        Returns: string;
+      };
+      undo_import: { Args: { p_batch_id: string; p_unlock: boolean }; Returns: number };
+      restore_backup: { Args: { p: Record<string, unknown> }; Returns: Record<string, number> };
+      delete_my_data: { Args: Record<string, never>; Returns: undefined };
       asset_cash_lines: {
         Args: { p_to?: string | null };
         Returns: {

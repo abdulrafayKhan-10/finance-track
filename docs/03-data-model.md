@@ -162,12 +162,16 @@ Snapshots are inserted directly into `net_worth_snapshots` (a single row): the s
 
 Error codes added: `FT008` position would go below zero, `FT009` asset archived.
 
-**Planned:**
+**Built (Phase 6, migration 0011):**
 
-| Function                                                     | Purpose                                                                            |
-| ------------------------------------------------------------ | ---------------------------------------------------------------------------------- |
-| `import_transactions(batch jsonb)` / `undo_import(batch_id)` | All-or-nothing CSV commit with per-row errors; removing a whole batch (Phase 6).   |
-| `restore_backup(p jsonb)` / `delete_my_data()`               | Full restore into an empty account, and deleting all of the user's data (Phase 6). |
+| Function                        | Purpose                                                                                                                                      |
+| ------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| `import_transactions(p jsonb)`  | Creates a batch and every row through `create_transaction`; if any row fails, nothing is saved and `FT010` lists `[{row, code}]` in DETAIL.  |
+| `undo_import(batch_id, unlock)` | Deletes the batch and, by cascade, its transactions; reconciled ones need `unlock` (`FT006`).                                                |
+| `restore_backup(p jsonb)`       | Loads a backup into an empty account in one transaction, keeping ids; system categories are matched by `system_key` and references remapped. |
+| `delete_my_data()`              | Deletes every financial record of the caller; keeps the login, profile and system categories.                                                |
+
+Error code added: `FT010` import rejected. Account deletion uses the admin API (`auth.admin.deleteUser`) after a password re-check; every row goes with it by cascade.
 
 ## 3.6 Deletion, edit and reversal strategy
 
@@ -192,7 +196,7 @@ Migrations live in `supabase/migrations/` (timestamp-prefixed filenames, numbere
 8. `0008_exchange_rates.sql` (built): dated exchange rates.
 9. `0009_net_worth_snapshots.sql` (built): immutable snapshots and `ledger_lines`.
 10. `0010_investments.sql` (built): assets, valuations, holding movements, position invariant, investment RPC branches.
-11. `0011_imports_backup.sql`: import batches, restore, delete-my-data.
+11. `0011_imports_backup.sql` (built): import batches, restore, delete-my-data.
 
 Every migration ships with SQL tests (RLS and invariants) in the same PR. Types are regenerated after each schema change.
 

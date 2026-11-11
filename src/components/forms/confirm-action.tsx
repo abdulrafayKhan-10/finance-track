@@ -60,7 +60,7 @@ export function ConfirmAction({
             <input key={name} type="hidden" name={name} value={value} />
           ))}
           {children}
-          <FormMessage error={state.error} />
+          <FormMessage error={state.error ?? Object.values(state.fieldErrors ?? {})[0]} success={state.success} />
           <div className="flex flex-wrap justify-end gap-2">
             <AlertDialogCancel type="button">Cancel</AlertDialogCancel>
             <SubmitButton pending={pending} pendingLabel="Working…" variant={destructive ? "destructive" : "default"}>

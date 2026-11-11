@@ -37,7 +37,7 @@ Items ticked in Phase 2 are covered by automated tests that run in CI. Cross-use
 - [ ] MFA enrolment works; app routes require aal2 once enrolled
 - [ ] Security headers present (checked by a test against the production build)
 - [ ] No financial data in logs, URLs (only ids in query strings) or the service-worker cache
-- [ ] CSV export neutralizes formula injection
-- [ ] Account deletion removes every row and the auth user; the export is offered first
+- [x] CSV export neutralizes formula injection (Phase 6, `src/lib/csv`)
+- [x] Account deletion removes every row and the auth user; the export is offered first (Phase 6, Settings → Data)
 - [ ] Dependencies audited (`npm audit --omit=dev`) with no high or critical findings left unaddressed
 - [ ] `.env*`, backups and dumps are listed in `.gitignore`; a secret scan is run on the repository
