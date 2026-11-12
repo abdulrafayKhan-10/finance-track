@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Notice } from "@/components/app-shell/notice";
 import { PageHeader } from "@/components/app-shell/page-header";
 import { CheckboxField } from "@/components/forms/checkbox-field";
 import { ConfirmAction } from "@/components/forms/confirm-action";
@@ -13,13 +14,15 @@ import { formatTimestamp } from "@/lib/format";
 
 export const metadata: Metadata = { title: "Import CSV" };
 
-export default async function ImportPage() {
+export default async function ImportPage({ searchParams }: PageProps<"/transactions/import">) {
   await requireUser();
   const [accounts, batches, ctx] = await Promise.all([getAccountOptions(), listImportBatches(), loadFinanceContext()]);
+  const query = await searchParams;
   const accountName = (id: string | null) => accounts.find((a) => a.id === id)?.name ?? "an account";
 
   return (
     <>
+      <Notice value={query.notice} />
       <PageHeader
         title="Import CSV"
         description="Bring in income and expenses from a bank or wallet statement. Every row is checked before anything is saved."

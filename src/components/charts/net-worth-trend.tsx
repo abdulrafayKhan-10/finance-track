@@ -54,8 +54,9 @@ export function NetWorthTrend({
             strokeWidth={2}
             strokeLinecap="round"
             strokeLinejoin="round"
+            // With one or two months there is little or no line to see, so every point gets a dot.
             dot={(props: { cx?: number; cy?: number; payload?: { snapshot: boolean }; index?: number }) =>
-              props.payload?.snapshot ? (
+              props.payload?.snapshot || points.length <= 2 ? (
                 <circle
                   key={props.index}
                   cx={props.cx}

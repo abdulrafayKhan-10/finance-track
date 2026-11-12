@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { z } from "zod";
 import { listAccounts } from "@/data/repositories/accounts";
 import { listCategories } from "@/data/repositories/categories";
@@ -24,6 +25,7 @@ import {
   mapImportRows,
 } from "@/lib/csv/import";
 import { userMessage } from "@/lib/errors";
+import { withNotice } from "@/lib/notice";
 import { uuid } from "@/lib/validation/form";
 import { type ActionState, failure } from "../action-state";
 
@@ -209,12 +211,13 @@ export async function undoImport(_prev: ActionState, formData: FormData): Promis
     return { fieldErrors: { confirm: "Type UNDO to confirm." } };
   }
   try {
-    const removed = await undoImportRpc(id.data, formData.get("unlock") === "on");
-    revalidatePath("/", "layout");
-    return { success: `Import undone: ${removed} transaction${removed === 1 ? "" : "s"} removed.` };
+    await undoImportRpc(id.data, formData.get("unlock") === "on");
   } catch (error) {
     return failure(error, {
       FT006: "Some of these transactions are reconciled. Tick the unlock box to remove them anyway.",
     });
   }
+  revalidatePath("/", "layout");
+  // The dialog closes with the list it belonged to, so the outcome is shown on the page.
+  redirect(withNotice("/transactions/import", "import_undone"));
 }

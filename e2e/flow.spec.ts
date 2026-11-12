@@ -25,6 +25,15 @@ function todayKarachi(): { iso: string; dmy: string } {
   return { iso: `${parts.year}-${parts.month}-${parts.day}`, dmy: `${parts.day}/${parts.month}/${parts.year}` };
 }
 
+/** Type buttons are labels around a visually hidden radio: click what a person clicks. */
+async function chooseKind(page: Page, name: string) {
+  await page
+    .locator("label")
+    .filter({ has: page.getByRole("radio", { name, exact: true }) })
+    .click();
+  await expect(page.getByRole("radio", { name, exact: true })).toBeChecked();
+}
+
 async function addTransaction(page: Page, fill: (page: Page) => Promise<void>) {
   await page.goto("/transactions/new");
   await fill(page);
@@ -50,21 +59,21 @@ test("create a bank account and an investment account", async ({ page }) => {
 
 test("record income, an expense and a transfer", async ({ page }) => {
   await addTransaction(page, async (p) => {
-    await p.getByLabel("Income", { exact: true }).check();
+    await chooseKind(p, "Income");
     await p.getByLabel("Account", { exact: true }).selectOption({ label: `${BANK} (PKR)` });
     await p.getByLabel(/^Amount/).fill("50000");
     await p.getByLabel("Category").selectOption({ label: "Salary" });
     await p.getByLabel("Description").fill("E2E salary");
   });
   await addTransaction(page, async (p) => {
-    await p.getByLabel("Expense", { exact: true }).check();
+    await chooseKind(p, "Expense");
     await p.getByLabel("Account", { exact: true }).selectOption({ label: `${BANK} (PKR)` });
     await p.getByLabel(/^Amount/).fill("1,500");
     await p.getByLabel("Category").selectOption({ label: "Food & groceries" });
     await p.getByLabel("Description").fill("E2E groceries");
   });
   await addTransaction(page, async (p) => {
-    await p.getByLabel("Transfer", { exact: true }).check();
+    await chooseKind(p, "Transfer");
     await p.getByLabel("From").selectOption({ label: `${BANK} (PKR)` });
     await p.getByLabel("To", { exact: true }).selectOption({ label: `${BROKER} (PKR)` });
     await p.getByLabel(/^Amount sent/).fill("20000");
@@ -77,14 +86,15 @@ test("set a budget and see the expense counted against it", async ({ page }) => 
   const input = page.getByLabel("Budget for Food & groceries (PKR)");
   await input.fill("20000");
   await page.locator("form", { has: input }).getByRole("button", { name: "Set" }).click();
-  await expect(page.getByText("Food & groceries: 8% of budget used")).toBeAttached();
+  await expect(page.getByRole("meter", { name: "Food & groceries: 8% of budget used" })).toBeVisible();
+  await expect(page.getByText("Rs 18,500.00")).toBeVisible();
 });
 
 test("add an asset, buy, value and sell it", async ({ page }) => {
   await page.goto("/investments/assets/new");
   await page.getByLabel("Category").selectOption({ label: "Gold" });
-  await page.getByLabel("Name").fill(GOLD);
-  await expect(page.getByLabel("Unit")).toHaveValue("tola");
+  await page.getByLabel("Name", { exact: true }).fill(GOLD);
+  await expect(page.getByLabel("Unit", { exact: true })).toHaveValue("tola");
   await page.getByRole("button", { name: "Create asset" }).click();
   await expect(page.getByRole("heading", { name: GOLD })).toBeVisible();
   assetUrl = new URL(page.url()).pathname;
@@ -92,7 +102,7 @@ test("add an asset, buy, value and sell it", async ({ page }) => {
 
   // Buy 0.1 tola at 200,000 with the broker's cash.
   await page.goto(`/investments/new?asset=${assetId}`);
-  await page.getByLabel("Buy", { exact: true }).check();
+  await chooseKind(page, "Buy");
   await page.getByLabel("Held in (investment account)").selectOption({ label: `${BROKER} (PKR)` });
   await page.getByLabel(/^Quantity/).fill("0.1");
   await page.getByLabel(/^Price per unit/).fill("200000");
@@ -108,7 +118,7 @@ test("add an asset, buy, value and sell it", async ({ page }) => {
 
   // Sell 0.05 tola at 220,000 into the broker account: realized gain 11,000 − 10,000 = 1,000.
   await page.goto(`/investments/new?asset=${assetId}`);
-  await page.getByLabel("Sell", { exact: true }).check();
+  await chooseKind(page, "Sell");
   await page.getByLabel("Held in (investment account)").selectOption({ label: `${BROKER} (PKR)` });
   await page.getByLabel(/^Quantity/).fill("0.05");
   await page.getByLabel(/^Price per unit/).fill("220000");
@@ -120,7 +130,7 @@ test("add an asset, buy, value and sell it", async ({ page }) => {
 
 test("selling more than is held is refused", async ({ page }) => {
   await page.goto(`/investments/new?asset=${assetUrl.split("/").pop()}`);
-  await page.getByLabel("Sell", { exact: true }).check();
+  await chooseKind(page, "Sell");
   await page.getByLabel("Held in (investment account)").selectOption({ label: `${BROKER} (PKR)` });
   await page.getByLabel(/^Quantity/).fill("1");
   await page.getByLabel(/^Price per unit/).fill("220000");
@@ -164,7 +174,7 @@ test("export transactions as CSV and download a backup", async ({ page }) => {
 test("import a CSV statement, then undo it", async ({ page }) => {
   const { dmy } = todayKarachi();
   await page.goto("/transactions/import");
-  await page.getByLabel("CSV file").setInputFiles({
+  await page.getByLabel("CSV file", { exact: true }).setInputFiles({
     name: "e2e-statement.csv",
     mimeType: "text/csv",
     buffer: Buffer.from(`Date,Description,Amount\n${dmy},E2E imported coffee,-250\n${dmy},E2E imported cashback,100\n`),
@@ -180,5 +190,8 @@ test("import a CSV statement, then undo it", async ({ page }) => {
   const dialog = page.getByRole("alertdialog");
   await dialog.getByLabel("Type UNDO to confirm").fill("UNDO");
   await dialog.getByRole("button", { name: "Undo import" }).click();
-  await expect(dialog.getByText("Import undone: 2 transactions removed.")).toBeVisible();
+  await expect(page.getByText("Import undone: its transactions were removed.")).toBeVisible();
+  await expect(page.getByText("No imports yet.")).toBeVisible();
+  await page.goto("/transactions?tag=imported");
+  await expect(page.getByText("E2E imported coffee")).toHaveCount(0);
 });

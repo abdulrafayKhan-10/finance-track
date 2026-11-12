@@ -87,7 +87,7 @@ Legend: `[x]` done and verified, `[ ]` not started, `[~]` in progress.
 - [x] Valuations (unit price or total value, history, as-of, par mode); a total is divided by the quantity held on its date and the original input is kept
 - [x] Portfolio page, allocation, 12-month history; net worth includes valued holdings (method version 2); dashboard investments card; investment transactions in the transaction list and editable from it
 - [x] Tests: 14 database tests (shapes, oversell, edit/delete breaking a later sale, archived assets, precision, isolation, audit), 21 domain tests (partial and full sells, splits, as-of valuations, unvalued handling, par, double counting, FX), 10 validation tests. INV-5 and INV-9 are now covered
-- [ ] **Needs you:** apply migration 0010 to the dev project, then try an opening holding, a buy, a valuation and a sell
+- [x] Migration 0010 applied to the dev project; buy, valuation and sell verified end to end (Phase 7)
 
 ### Phase 5 notes
 
@@ -103,10 +103,10 @@ Legend: `[x]` done and verified, `[ ]` not started, `[~]` in progress.
 - [x] CSV exports of every entity (Settings → Data) and every report (Reports, incl. the new Investments tab); filtered transaction export from the Transactions page; formula injection neutralized
 - [x] JSON backup (every table with ids, read page by page) and restore into an empty account in one transaction; system categories remapped; round-trip database test compares every row and the derived balances and positions
 - [x] Delete all my data (type DELETE) and delete account (email + password re-check; needs `SUPABASE_SECRET_KEY`)
-- [~] Responsive polish, charts on mobile, accessibility pass: new screens are built mobile-first with labelled controls; a signed-in browser pass on phone and desktop is still to do (Phase 7 E2E)
+- [x] Responsive polish, charts on mobile, accessibility pass: verified signed in on a Pixel 7 and a desktop in Phase 7 (no sideways scroll, no console errors, labelled controls found by accessible name)
 - [x] Manifest, generated icons (`scripts/generate-icons.mjs`), service worker (static files and the offline page only; navigations network-only; caches cleared on sign-out), offline page
 - [x] Fix: every list that grows with history (ledger lines, postings, movements, valuations, rates, budgets, allocations, snapshots, exports) is read page by page; before, Supabase's 1,000-row limit would have silently cut figures short
-- [ ] **Needs you:** apply migration 0011, then try an import, a backup download, and the Data page
+- [x] Migration 0011 applied to the dev project (2026-11-12, together with 0010 and 0012)
 
 ### Phase 6 notes
 
@@ -115,13 +115,14 @@ Legend: `[x]` done and verified, `[ ]` not started, `[~]` in progress.
 - Restore keeps every id, so a backup can't be restored into a second account of the same database while the original records still exist (refused with a clear message).
 - Server-action bodies may be up to 11 MB (for backup restores; the app caps files at 10 MB).
 
-## Phase 7: Security and release verification — in progress (2026-11-12)
+## Phase 7: Security and release verification — done (2026-11-12)
 
-- [~] Full checklist in `05-security.md`: all items verified except public sign-up, which is still ON in the dev project (needs you; production in Phase 8)
-- [~] Two-user isolation run against the real dev project (`pnpm test:isolation`): passed for every table from migrations 0001–0009, anonymous access refused, MFA gate verified with a real TOTP factor. The investment and import tables follow once 0010–0012 are applied there
-- [~] E2E suite (Playwright, production build, desktop + Pixel 7): written (`e2e/`); the security-header and public checks pass; the signed-in journey and screen checks run once 0010–0012 are applied to the dev project
-- [x] Found and fixed: Supabase Auth could not delete a user who had transactions (migration 0012, `tests/db/auth-deletion.test.ts`); "Delete my account" would have failed
-- [ ] **Needs you:** apply `finance-track-migrations-0010-0012.sql`, turn public sign-up off, then I run `pnpm test:e2e` and review the screenshots
+- [x] Full checklist in `05-security.md`: every item verified; public sign-up is off in the dev project (production is configured in Phase 8)
+- [x] Two-user isolation against the real dev project (`pnpm test:isolation`): B can't read, change, delete or reach through RPCs anything of A's in any of the 16 user tables, including investments and imports; anonymous calls refused; MFA aal2 gate verified with a real TOTP factor
+- [x] E2E suite (`pnpm test:e2e`, production build, desktop + Pixel 7): 50 tests pass. The release journey checks net worth to the rupee (Rs 150,000.00) after income, expense, transfer, budget, gold buy/valuation/sell; oversell refused; CSV export, backup, import and undo work; all 15 main screens render on phone and desktop with no console errors and no sideways scroll
+- [x] Found and fixed: Supabase Auth could not delete a user who had transactions (migration 0012); "Delete my account" would have failed
+- [x] Found and fixed: a trend chart with a single month drew nothing (now shows the point); undoing an import gave no visible confirmation (now a notice)
+- [x] Visual review of the phone and desktop screenshots
 
 ## Phase 8: Free deployment
 
