@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import { AccountForm } from "@/components/accounts/account-form";
 import { PageHeader } from "@/components/app-shell/page-header";
-import { getProfile } from "@/data/repositories/profile";
 import { todayIn } from "@/domain/dates";
+import { loadFinanceContext } from "@/features/finance-context";
 import { saveAccount } from "@/features/accounts/actions";
 import { requireUser } from "@/lib/auth";
 
@@ -10,7 +10,7 @@ export const metadata: Metadata = { title: "New account" };
 
 export default async function NewAccountPage() {
   await requireUser();
-  const profile = await getProfile();
+  const profile = await loadFinanceContext().then((c) => c.profile);
   return (
     <>
       <PageHeader

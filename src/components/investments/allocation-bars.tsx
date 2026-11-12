@@ -20,7 +20,7 @@ export function AllocationBars({ allocation }: { allocation: Portfolio["allocati
               </span>
             </div>
             <div className="h-2 w-full rounded-full bg-muted" aria-hidden>
-              <div className="h-full rounded-full bg-series-1" style={{ width: `${width}%` }} />
+              <div className="h-full rounded-full bg-brass" style={{ width: `${width}%` }} />
             </div>
           </li>
         );

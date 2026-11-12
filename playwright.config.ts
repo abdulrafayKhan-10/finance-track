@@ -40,6 +40,12 @@ export default defineConfig({
       use: { ...devices["Pixel 7"], storageState: "e2e/.auth/state.json" },
     },
     {
+      name: "mobile-dark",
+      testMatch: /screens\.spec\.ts/,
+      dependencies: ["desktop"],
+      use: { ...devices["Pixel 7"], colorScheme: "dark", storageState: "e2e/.auth/state.json" },
+    },
+    {
       name: "desktop-screens",
       testMatch: /screens\.spec\.ts/,
       dependencies: ["desktop"],

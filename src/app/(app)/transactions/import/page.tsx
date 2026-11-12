@@ -5,10 +5,10 @@ import { CheckboxField } from "@/components/forms/checkbox-field";
 import { ConfirmAction } from "@/components/forms/confirm-action";
 import { FormField } from "@/components/forms/form-field";
 import { ImportWizard } from "@/components/imports/import-wizard";
-import { listImportBatches } from "@/data/repositories/imports";
 import { getAccountOptions } from "@/features/accounts/queries";
 import { loadFinanceContext } from "@/features/finance-context";
 import { undoImport } from "@/features/imports/actions";
+import { getImportBatches } from "@/features/imports/queries";
 import { requireUser } from "@/lib/auth";
 import { formatTimestamp } from "@/lib/format";
 
@@ -16,7 +16,7 @@ export const metadata: Metadata = { title: "Import CSV" };
 
 export default async function ImportPage({ searchParams }: PageProps<"/transactions/import">) {
   await requireUser();
-  const [accounts, batches, ctx] = await Promise.all([getAccountOptions(), listImportBatches(), loadFinanceContext()]);
+  const [accounts, batches, ctx] = await Promise.all([getAccountOptions(), getImportBatches(), loadFinanceContext()]);
   const query = await searchParams;
   const accountName = (id: string | null) => accounts.find((a) => a.id === id)?.name ?? "an account";
 

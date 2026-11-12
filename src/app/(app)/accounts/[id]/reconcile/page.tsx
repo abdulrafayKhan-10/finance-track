@@ -7,9 +7,9 @@ import { ConfirmAction } from "@/components/forms/confirm-action";
 import { Amount } from "@/components/money/amount";
 import { ReconcileForm } from "@/components/reconciliation/reconcile-form";
 import { Badge } from "@/components/ui/badge";
-import { getProfile } from "@/data/repositories/profile";
 import { todayIn } from "@/domain/dates";
 import { displayBalance } from "@/domain/ledger";
+import { loadFinanceContext } from "@/features/finance-context";
 import { getAccountDetail } from "@/features/accounts/queries";
 import { reconcile, undoReconciliation } from "@/features/reconciliation/actions";
 import { requireUser } from "@/lib/auth";
@@ -20,7 +20,7 @@ export const metadata: Metadata = { title: "Reconcile" };
 export default async function ReconcilePage({ params, searchParams }: PageProps<"/accounts/[id]/reconcile">) {
   await requireUser();
   const [{ id }, query] = await Promise.all([params, searchParams]);
-  const [detail, profile] = await Promise.all([getAccountDetail(id), getProfile()]);
+  const [detail, profile] = await Promise.all([getAccountDetail(id), loadFinanceContext().then((c) => c.profile)]);
   if (!detail) notFound();
   const { account, rows, reconciliations } = detail;
 

@@ -37,6 +37,7 @@ Cross-cutting: src/lib/validation (Zod), src/lib/env.ts, src/lib/auth.ts
 Rules:
 
 1. `src/domain` imports nothing from React, Next.js or Supabase. An ESLint `no-restricted-imports` rule enforces this.
+   Routes (`src/app`) and components never import `src/data`: they read through `src/features/*/queries.ts` and write through `src/features/*/actions.ts` (ESLint enforces this too; `src/app/auth/**` is the one exception). Data and feature code never import UI.
 2. Every financial figure shown in the UI comes from a domain function. Components only format values.
 3. The database enforces structural invariants (ownership, balanced transfers, signs, non-negative quantities). The domain computes meaning (classification, conversion, cost basis, net worth). SQL does only plain aggregation (sums grouped by account, currency, category and month) and applies no policy, so each formula exists in one place.
 4. Every write that touches more than one row goes through one PostgreSQL function (RPC) and runs in a single database transaction. A failure rolls back everything.

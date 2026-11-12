@@ -1,17 +1,35 @@
 # 6. UI design system
 
-## 6.1 Principles
+## 6.1 Direction: "Treasury"
 
-Calm, dense where it helps (tables) and spacious where it helps (forms). Numbers come first: tabular figures, right-aligned, with signs and colours that never carry meaning alone.
+The app is a private ledger for money held in rupees, gold and shares, so its look comes from banknotes and ledgers: treasury-green ink on cool paper, brass for gold and investments, and the fine engraved line pattern (guilloche) used in security printing.
 
-## 6.2 Tokens (CSS variables, shadcn convention, light and dark)
+- **One bold element.** Net worth is printed on an ink "note" with the engraving in its lower field (dashboard), and the same ink panel frames sign-in. Everything else stays quiet: paper background, white panels with hairline borders, no drop shadows, no gradients.
+- **Numbers first.** Tabular figures, right-aligned in tables, a minus sign as well as colour for negatives, headline figures in the display face.
+- **Calm, dense where it helps** (tables, lists) and spacious where it helps (forms).
+- **Brass means investments.** It is not a general accent; using it elsewhere dilutes the meaning.
 
-- **Neutrals:** `--background`, `--foreground`, `--muted`, `--card`, `--border`.
-- **Semantic:** `--primary` (teal), `--positive` (green), `--negative` (red), `--warning` (amber), `--info`. Every pair meets WCAG AA contrast in both themes.
-- **Money:** positive amounts plain, negative amounts with a "−" sign **and** the negative colour. Liabilities read as "owes Rs X".
-- **Type:** Inter (self-hosted) with `font-variant-numeric: tabular-nums` for all figures. Scale 12/14/16/20/24/30.
-- **Spacing:** a 4px grid. Radius 0.5rem. Touch targets ≥ 44×44px.
-- **Theme:** system, light or dark, stored in the profile with a cookie fallback, applied before paint so there is no flash.
+## 6.2 Tokens (`src/app/globals.css`, light and dark)
+
+| Token                             | Light                | Dark              | Use                                 |
+| --------------------------------- | -------------------- | ----------------- | ----------------------------------- |
+| `background`                      | #F4F7F5 paper        | #0E1A16           | page                                |
+| `card`                            | #FFFFFF              | #14231E           | panels, inputs                      |
+| `foreground` / `muted-foreground` | #15241F / #53635D    | #E5EEE9 / #9DB1A9 | text                                |
+| `primary`                         | #123C33 treasury ink | #8FD0B5           | actions, links, focus               |
+| `sidebar`, `note`                 | #123C33              | #0A1411, #123A30  | the ink panels                      |
+| `brass` / `brass-foreground`      | #A8781E / #7A560F    | #D6AB55 / #E4C072 | investments only                    |
+| `positive` / `negative`           | #23744A / #B3402E    | #6CC993 / #EF8C79 | gains, money in / losses, money out |
+| `warning`                         | #8F6512              | #E2B65A           | stale rates, unvalued holdings      |
+| `series-1` / `series-2`           | #1F6F5C / #B07A1E    | #5DBB97 / #D9A445 | the two chart series                |
+
+Every text/background pair meets WCAG AA in both themes (checked when the palette was set; re-check when changing a token).
+
+- **Type:** Public Sans (body, forms, tables; clear tabular figures) and Bricolage Grotesque (`font-display`: page titles, section headings, headline amounts), both self-hosted via `next/font`. Sentence case everywhere; no all-caps labels.
+- **Radius hierarchy:** the note 1.25rem (`rounded-note`), panels `rounded-xl`, controls `rounded-md`.
+- **Spacing:** a 4px grid. Touch targets ≥ 44×44px on touch layouts.
+- **Theme:** system, light or dark (`next-themes`), applied before paint.
+- **Signature component:** `src/components/figures/guilloche.tsx` (deterministic SVG, decorative, `aria-hidden`). Never place it behind text that must be read.
 
 ## 6.3 Formatting
 
@@ -21,8 +39,8 @@ Calm, dense where it helps (tables) and spacious where it helps (forms). Numbers
 
 ## 6.4 Layout
 
-- **Desktop (≥ 1024px):** collapsible left sidebar with the 10 modules, a top bar with the period picker and a quick-add button.
-- **Mobile:** a bottom navigation bar with 5 items (Dashboard, Transactions, **+ Add**, Investments, More). Tables turn into card lists. Charts use reduced axes and tap tooltips. Forms are single-column with native date and number keyboards (`inputmode="decimal"`).
+- **Desktop (≥ 1024px):** a deep-ink sidebar with the modules (the current one marked by a lighter panel and a brass edge) beside paper content.
+- **Mobile:** an ink top bar (matching the status-bar colour) and a bottom navigation bar with 5 items (Dashboard, Transactions, Accounts, Investments, More). Tables turn into card lists. Charts use reduced axes and tap tooltips. Forms are single-column with native date and number keyboards (`inputmode="decimal"`).
 - Safe-area insets are respected for PWA standalone mode on iOS and Android.
 
 ## 6.5 Components and states

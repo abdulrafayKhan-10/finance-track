@@ -3,9 +3,9 @@ import { notFound } from "next/navigation";
 import { AccountForm } from "@/components/accounts/account-form";
 import { PageHeader } from "@/components/app-shell/page-header";
 import { ConfirmAction } from "@/components/forms/confirm-action";
-import { accountsWithLines, getAccount } from "@/data/repositories/accounts";
 import { displayBalance } from "@/domain/ledger";
 import { deleteAccount, saveAccount } from "@/features/accounts/actions";
+import { getAccountForEdit } from "@/features/accounts/queries";
 import { requireUser } from "@/lib/auth";
 
 export const metadata: Metadata = { title: "Edit account" };
@@ -13,9 +13,9 @@ export const metadata: Metadata = { title: "Edit account" };
 export default async function EditAccountPage({ params }: PageProps<"/accounts/[id]/edit">) {
   await requireUser();
   const { id } = await params;
-  const [account, used] = await Promise.all([getAccount(id), accountsWithLines()]);
-  if (!account) notFound();
-  const hasTransactions = used.has(account.id);
+  const found = await getAccountForEdit(id);
+  if (!found) notFound();
+  const { account, hasTransactions } = found;
 
   return (
     <>

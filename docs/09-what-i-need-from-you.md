@@ -2,7 +2,11 @@
 
 Everything below needs your own accounts or your devices, so I can't do it from the development container. None of it costs money. Each item says when it's needed.
 
-## 1. Supabase: needed now (before Phase 5 is tested for real)
+## 1. Supabase dev project — done (2026-11-12)
+
+Done: project created, migrations 0001–0012 applied, owner user created, public sign-up off. Kept below for when the production project is set up in Phase 8 (same steps, a second project). New migrations: apply the paste-ready file in the SQL Editor; this PC has no IPv6 route to the direct database host.
+
+### Original steps
 
 Supabase hosts the database and the sign-in system. Use **two** free projects: one for development and testing, and one for your real data (production). The production one can wait until Phase 8.
 
@@ -26,7 +30,7 @@ Supabase hosts the database and the sign-in system. Use **two** free projects: o
 
 Then run the app on your PC (`pnpm install`, then `pnpm dev`), open <http://localhost:3000>, sign in, and go to _Settings → Security_ to set up two-factor authentication. Tell me whether sign-in, adding an account and adding a transaction work. That is the first test against real Supabase.
 
-## 2. Your computer: needed now, for running the app yourself
+## 2. Your computer — done
 
 - **Node.js 22 LTS** from <https://nodejs.org>, then `corepack enable` (this installs the pinned pnpm).
 - **Git**, and a clone of the repository (`git clone https://github.com/abdulrafayKhan-10/finance-track`), on branch `claude/ecstatic-gauss-goezna` until it's merged.

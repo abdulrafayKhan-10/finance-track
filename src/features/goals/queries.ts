@@ -1,6 +1,6 @@
 import "server-only";
 import { accountTotals } from "@/data/repositories/accounts";
-import { type AllocationRecord, type GoalRecord, listAllocations, listGoals } from "@/data/repositories/goals";
+import { type AllocationRecord, getGoal, type GoalRecord, listAllocations, listGoals } from "@/data/repositories/goals";
 import { goalProgress, type GoalProgress, type OverAllocation, overAllocations } from "@/domain/goals/goals";
 import { accountBalance } from "@/domain/ledger";
 import type { Money } from "@/domain/money";
@@ -40,4 +40,12 @@ export async function getGoals(): Promise<{
       accountName: accountName.get(o.accountId) ?? "An account",
     })),
   };
+}
+
+/** The goal to edit, and whether allocations lock its funding mode and currency. */
+export async function getGoalForEdit(id: string): Promise<{ goal: GoalRecord; locked: boolean } | null> {
+  const goal = await getGoal(id);
+  if (!goal) return null;
+  const allocations = await listAllocations([goal], goal.id);
+  return { goal, locked: allocations.length > 0 };
 }

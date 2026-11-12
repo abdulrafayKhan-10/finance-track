@@ -5,17 +5,15 @@ import { ChangePasswordForm } from "@/components/settings/change-password-form";
 import { RemoveFactor } from "@/components/settings/remove-factor";
 import { TotpEnrollment } from "@/components/settings/totp-enrollment";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { createClient } from "@/data/supabase/server";
 import { changePassword, removeTotpFactor, totpEnrollment } from "@/features/auth/actions";
+import { getVerifiedTotpFactor } from "@/features/auth/queries";
 import { requireUser } from "@/lib/auth";
 
 export const metadata: Metadata = { title: "Security" };
 
 export default async function SecurityPage() {
   await requireUser();
-  const supabase = await createClient();
-  const { data } = await supabase.auth.mfa.listFactors();
-  const verified = data?.totp.find((f) => f.status === "verified");
+  const verified = await getVerifiedTotpFactor();
 
   return (
     <>
@@ -33,7 +31,7 @@ export default async function SecurityPage() {
               <>
                 <p className="flex items-center gap-2 text-sm">
                   <ShieldCheck className="size-4 text-positive" aria-hidden />
-                  On since {new Date(verified.created_at).toLocaleDateString("en-GB", { timeZone: "Asia/Karachi" })}.
+                  On since {new Date(verified.createdAt).toLocaleDateString("en-GB", { timeZone: "Asia/Karachi" })}.
                 </p>
                 <RemoveFactor factorId={verified.id} action={removeTotpFactor} />
               </>

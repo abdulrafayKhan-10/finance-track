@@ -39,7 +39,7 @@ export const TRANSACTION_KINDS = [
 ] as const;
 export type TransactionKind = (typeof TRANSACTION_KINDS)[number];
 
-/** Kinds that can be entered before investments exist (Phase 5). */
+/** Kinds entered with the cash transaction form; investment kinds have their own form. */
 export const CASH_KINDS = ["expense", "income", "transfer", "refund", "adjustment"] as const;
 export type CashKind = (typeof CASH_KINDS)[number];
 

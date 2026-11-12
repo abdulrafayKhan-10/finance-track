@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { PageHeader } from "@/components/app-shell/page-header";
 import { ProfileForm } from "@/components/settings/profile-form";
-import { getProfile } from "@/data/repositories/profile";
+import { loadFinanceContext } from "@/features/finance-context";
 import { saveProfile } from "@/features/profile/actions";
 import { requireUser } from "@/lib/auth";
 
@@ -9,7 +9,7 @@ export const metadata: Metadata = { title: "Profile" };
 
 export default async function ProfilePage() {
   await requireUser();
-  const profile = await getProfile();
+  const profile = await loadFinanceContext().then((c) => c.profile);
   const zones = Intl.supportedValuesOf("timeZone");
   const timezones = zones.includes(profile.timezone) ? zones : [profile.timezone, ...zones];
   return (

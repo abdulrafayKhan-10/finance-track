@@ -4,7 +4,8 @@
 import { mkdirSync, writeFileSync } from "node:fs";
 import { deflateSync } from "node:zlib";
 
-const TEAL = [0, 117, 111];
+const TEAL = [18, 60, 51]; // treasury ink #123c33
+const BRASS = [168, 120, 30];
 const WHITE = [255, 255, 255];
 
 function crc32(buf) {
@@ -73,7 +74,7 @@ function shade(u, v, { pad, rounded }) {
   const flapGap = y > 0.39 && y < 0.43 && x > 0.2 && x < 0.8;
   const pocket = inRoundRect(x, y, 0.56, 0.47, 0.86, 0.61, 0.05);
   const clasp = (x - 0.66) ** 2 + (y - 0.54) ** 2 <= 0.03 ** 2;
-  if (clasp) return TEAL;
+  if (clasp) return BRASS;
   if (pocket) return WHITE;
   if (body && !flapGap) return WHITE;
   return TEAL;

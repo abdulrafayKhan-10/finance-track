@@ -6,6 +6,7 @@ import { point } from "@/components/charts/chart-data";
 import { NetWorthTrend } from "@/components/charts/net-worth-trend";
 import { CategoryBars } from "@/components/figures/category-bars";
 import { ExcludedNote } from "@/components/figures/excluded-note";
+import { Guilloche } from "@/components/figures/guilloche";
 import { Meter } from "@/components/figures/meter";
 import { Stat } from "@/components/figures/stat";
 import { Amount } from "@/components/money/amount";
@@ -22,9 +23,9 @@ export const metadata: Metadata = { title: "Dashboard" };
 
 function Section({ title, href, children }: { title: string; href?: string; children: React.ReactNode }) {
   return (
-    <section className="grid content-start gap-3 rounded-xl border bg-card p-4" aria-label={title}>
+    <section className="grid content-start gap-3 rounded-xl border bg-card p-5" aria-label={title}>
       <div className="flex items-center justify-between gap-2">
-        <h2 className="font-semibold">{title}</h2>
+        <h2 className="font-display text-lg font-semibold tracking-tight">{title}</h2>
         {href && (
           <Link href={href} className="inline-flex items-center gap-1 text-sm text-primary hover:underline">
             View <ArrowRight className="size-3.5" aria-hidden />
@@ -64,77 +65,102 @@ export default async function DashboardPage({ searchParams }: PageProps<"/">) {
   const periodLabel =
     period.key === "custom" ? `${formatDate(period.from)} – ${formatDate(period.to)}` : PERIOD_LABELS[period.key];
   const nw = d.netWorth;
+  // Change since the previous month-end in the trend (the last point is today).
+  const previous = d.trend.length > 1 ? d.trend[d.trend.length - 2] : undefined;
+  const change = previous ? { amount: nw.netWorth.minus(previous.netWorth.netWorth), since: previous.date } : null;
 
   return (
     <>
-      <div className="flex flex-wrap items-start justify-between gap-4">
-        <PageHeader title="Dashboard" description={`Figures for ${periodLabel.toLowerCase()} · balances as of today`} />
-        <PeriodPicker period={period} />
-      </div>
+      <PageHeader title="Dashboard" description="Where your money stands today, and how this period went." />
 
-      <section
-        aria-label="Net worth"
-        className="mb-6 grid gap-4 rounded-xl border bg-card p-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,2fr)]"
-      >
-        <div className="grid content-start gap-3">
-          <span className="text-sm text-muted-foreground">Net worth today</span>
-          <Amount money={nw.netWorth} className="text-4xl font-semibold tracking-tight md:text-5xl" />
-          <dl className="grid grid-cols-2 gap-2 text-sm">
+      <div className="mb-8 grid gap-4 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)]">
+        {/* The note: net worth printed on ink, the one bold element of the app. */}
+        <section
+          aria-labelledby="nw-title"
+          className="relative isolate flex flex-col overflow-hidden rounded-note bg-note px-5 pt-5 pb-24 text-sidebar-foreground sm:px-7 sm:pt-7 sm:pb-28"
+        >
+          {/* Engraving fills the lower field of the note, never behind the figure. */}
+          <Guilloche className="absolute inset-x-0 bottom-0 -z-10 h-32 w-full [mask-image:linear-gradient(to_bottom,transparent,black_45%)] opacity-80 sm:h-40" />
+          <h2 id="nw-title" className="text-sm text-note-muted">
+            Net worth today
+          </h2>
+          <Amount
+            money={nw.netWorth}
+            colored={false}
+            className="mt-2 block font-display text-[2.6rem] leading-none font-semibold tracking-tight sm:text-6xl"
+          />
+          {change && (
+            <p className="mt-3 text-sm text-note-muted">
+              <Amount money={change.amount} sign="always" colored={false} className="text-sidebar-foreground" /> since{" "}
+              {formatDate(change.since)}
+            </p>
+          )}
+          <dl className="mt-6 grid grid-cols-2 gap-x-4 gap-y-3 border-t border-sidebar-border pt-4 text-sm sm:grid-cols-4">
             <div>
-              <dt className="text-xs text-muted-foreground">Cash and bank (liquid)</dt>
+              <dt className="text-xs text-note-muted">Cash and bank</dt>
               <dd>
-                <Amount money={nw.liquid} />
+                <Amount money={nw.liquid} colored={false} />
               </dd>
             </div>
             <div>
-              <dt className="text-xs text-muted-foreground">Investments (valued)</dt>
+              <dt className="flex items-center gap-1.5 text-xs text-note-muted">
+                <span className="size-1.5 rounded-full bg-brass" aria-hidden />
+                Investments
+              </dt>
               <dd>
-                <Amount money={nw.holdingsValue} />
+                <Amount money={nw.holdingsValue} colored={false} />
               </dd>
             </div>
             <div>
-              <dt className="text-xs text-muted-foreground">Investment accounts (cash)</dt>
+              <dt className="text-xs text-note-muted">Broker cash</dt>
               <dd>
-                <Amount money={nw.investmentCash} />
+                <Amount money={nw.investmentCash} colored={false} />
               </dd>
             </div>
             <div>
-              <dt className="text-xs text-muted-foreground">All assets</dt>
-              <dd>
-                <Amount money={nw.assets} />
-              </dd>
-            </div>
-            <div>
-              <dt className="text-xs text-muted-foreground">Owed</dt>
+              <dt className="text-xs text-note-muted">Owed</dt>
               <dd>
                 <Amount money={nw.liabilities} colored={false} />
               </dd>
             </div>
           </dl>
           {nw.unvaluedHoldings.length > 0 && (
-            <p className="text-xs text-warning">
-              {nw.unvaluedHoldings.length} holding{nw.unvaluedHoldings.length === 1 ? "" : "s"} unvalued and not
-              included.{" "}
-              <Link href="/investments" className="underline">
+            <p className="mt-4 text-xs text-note-muted">
+              {nw.unvaluedHoldings.length} holding{nw.unvaluedHoldings.length === 1 ? " isn’t" : "s aren’t"} counted
+              yet.{" "}
+              <Link href="/investments" className="text-sidebar-foreground underline underline-offset-2">
                 Add a valuation
               </Link>
-              .
             </p>
           )}
-          <ExcludedNote excluded={nw.unconvertible.map((a) => a.balance)} stale={nw.usedStaleRate} />
-        </div>
-        <div className="grid content-start gap-1">
-          <span className="text-sm text-muted-foreground">Last 12 months (month-end)</span>
+        </section>
+
+        <section aria-labelledby="trend-title" className="grid content-start gap-2 rounded-xl border bg-card p-5">
+          <h2 id="trend-title" className="font-display text-lg font-semibold tracking-tight">
+            Last 12 months
+          </h2>
+          <p className="text-xs text-muted-foreground">Net worth at each month-end.</p>
           <NetWorthTrend
             points={d.trend.map((p) => ({
               ...point(formatMonthShort(p.date), p.netWorth.netWorth),
               snapshot: p.snapshot !== null,
             }))}
           />
-        </div>
-      </section>
+          <ExcludedNote excluded={nw.unconvertible.map((a) => a.balance)} stale={nw.usedStaleRate} />
+        </section>
+      </div>
 
-      <div className="mb-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+      {/* The period only affects cash-flow figures, so its picker sits with them. */}
+      <section aria-labelledby="period-title" className="mb-4 flex flex-wrap items-end justify-between gap-4">
+        <div className="grid gap-1">
+          <h2 id="period-title" className="font-display text-xl font-semibold tracking-tight">
+            {periodLabel}
+          </h2>
+          <p className="text-sm text-muted-foreground">Income, spending and savings in this period.</p>
+        </div>
+        <PeriodPicker period={period} />
+      </section>
+      <div className="mb-8 grid grid-cols-2 gap-3 lg:grid-cols-4">
         <Stat label="Income">
           <Amount money={cf.income} />
         </Stat>

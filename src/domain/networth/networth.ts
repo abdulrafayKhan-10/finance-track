@@ -6,7 +6,7 @@ import { type CurrencyCode, Money } from "../money";
 
 /**
  * Bumped whenever the calculation changes, so stored snapshots say how they were made.
- * 1: account balances only. 2: adds valued investment holdings (Phase 5).
+ * 1: account balances only. 2: adds valued investment holdings.
  */
 export const NET_WORTH_METHOD_VERSION = 2;
 

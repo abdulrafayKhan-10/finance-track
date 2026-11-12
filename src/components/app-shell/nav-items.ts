@@ -7,10 +7,10 @@ import {
   LayoutDashboard,
   type LucideIcon,
   Menu,
-  PiggyBank,
   Scale,
   Settings,
   TrendingUp,
+  Wallet,
 } from "lucide-react";
 
 export type NavItem = { href: string; label: string; icon: LucideIcon; mobile?: boolean };
@@ -34,7 +34,7 @@ export const MOBILE_ITEMS: NavItem[] = [
   { href: "/more", label: "More", icon: Menu },
 ];
 
-export const BRAND_ICON = PiggyBank;
+export const BRAND_ICON = Wallet;
 
 /** True when `pathname` is inside the section `href` (Dashboard matches only "/"). */
 export function isActive(href: string, pathname: string): boolean {

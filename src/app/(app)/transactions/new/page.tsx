@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
 import { PageHeader } from "@/components/app-shell/page-header";
 import { TransactionForm } from "@/components/transactions/transaction-form";
-import { getProfile } from "@/data/repositories/profile";
 import { todayIn } from "@/domain/dates";
 import { CASH_KINDS, type CashKind } from "@/domain/ledger";
+import { loadFinanceContext } from "@/features/finance-context";
 import { getAccountOptions } from "@/features/accounts/queries";
 import { getCategoryOptions } from "@/features/categories/queries";
 import { saveTransaction } from "@/features/transactions/actions";
@@ -17,7 +17,7 @@ export default async function NewTransactionPage({ searchParams }: PageProps<"/t
   await requireUser();
   const [params, profile, accounts, categories] = await Promise.all([
     searchParams,
-    getProfile(),
+    loadFinanceContext().then((c) => c.profile),
     getAccountOptions(),
     getCategoryOptions(),
   ]);

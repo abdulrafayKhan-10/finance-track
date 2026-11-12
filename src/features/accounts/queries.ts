@@ -1,5 +1,11 @@
 import "server-only";
-import { type AccountRecord, accountTotals, getAccount, listAccounts } from "@/data/repositories/accounts";
+import {
+  type AccountRecord,
+  accountsWithLines,
+  accountTotals,
+  getAccount,
+  listAccounts,
+} from "@/data/repositories/accounts";
 import { listReconciliations, type Reconciliation } from "@/data/repositories/reconciliations";
 import { type AccountPosting, accountPostings } from "@/data/repositories/transactions";
 import { accountBalance, displayBalance, runningBalances } from "@/domain/ledger";
@@ -111,4 +117,12 @@ export type AccountOption = {
 export async function getAccountOptions(): Promise<AccountOption[]> {
   const accounts = await listAccounts();
   return accounts.map((a) => ({ id: a.id, name: a.name, currency: a.currency, class: a.class, status: a.status }));
+}
+
+/** The account to edit, and whether transactions lock its currency, type and opening date. */
+export async function getAccountForEdit(
+  id: string,
+): Promise<{ account: AccountRecord; hasTransactions: boolean } | null> {
+  const [account, used] = await Promise.all([getAccount(id), accountsWithLines()]);
+  return account ? { account, hasTransactions: used.has(account.id) } : null;
 }

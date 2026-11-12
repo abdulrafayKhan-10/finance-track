@@ -9,14 +9,14 @@ import { CheckboxField } from "@/components/forms/checkbox-field";
 import { InvestmentForm } from "@/components/investments/investment-form";
 import { Amount } from "@/components/money/amount";
 import { TransactionForm } from "@/components/transactions/transaction-form";
-import { listAssets } from "@/data/repositories/investments";
-import { getProfile } from "@/data/repositories/profile";
 import { isInvestmentKind } from "@/domain/investments/types";
+import { loadFinanceContext } from "@/features/finance-context";
 import { getAccountOptions } from "@/features/accounts/queries";
 import { getCategoryOptions } from "@/features/categories/queries";
 import { saveInvestmentTransaction } from "@/features/investments/actions";
 import { investmentValuesFromRecord } from "@/features/investments/form-values";
 import { investmentFormOptions } from "@/features/investments/options";
+import { loadInvestments } from "@/features/investments/queries";
 import { deleteTransaction, saveTransaction } from "@/features/transactions/actions";
 import { formValuesFromRecord } from "@/features/transactions/form-values";
 import { getTransactionDetail } from "@/features/transactions/queries";
@@ -39,13 +39,15 @@ export default async function TransactionPage({ params, searchParams }: PageProp
     getTransactionDetail(id),
     getAccountOptions(),
     getCategoryOptions(),
-    getProfile(),
+    loadFinanceContext().then((c) => c.profile),
   ]);
   if (!detail) notFound();
   const { view, audit } = detail;
   const locked = view.reconciliationId !== null;
   const investment = isInvestmentKind(view.kind);
-  const [options, assets] = investment ? await Promise.all([investmentFormOptions(), listAssets()]) : [null, []];
+  const [options, assets] = investment
+    ? await Promise.all([investmentFormOptions(), loadInvestments().then((i) => i.assets)])
+    : [null, []];
   const investmentValues = investment ? investmentValuesFromRecord(view, assets) : null;
   const editable = investment ? null : formValuesFromRecord(view, detail.accounts);
 
