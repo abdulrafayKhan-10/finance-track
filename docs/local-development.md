@@ -53,6 +53,21 @@ pnpm dev                            # http://localhost:3000
 | `pnpm test:db`                      | Creates a fresh database `finance_track_test`, applies a small Supabase stand-in plus all migrations, then runs the RLS, isolation and invariant tests |
 | `pnpm check:bundle`                 | After a build, fails if any privileged-key marker is in the browser bundle                                                                             |
 | `pnpm check`                        | All of the above except `test:db`                                                                                                                      |
+| `pnpm test:e2e`                     | Builds, starts the app on port 3100 and runs the Playwright suite against the **dev** Supabase project (see below)                                     |
+| `pnpm test:isolation`               | Only the real-Supabase security checks: two-user isolation, anonymous access, sign-up setting, MFA gate                                                |
+
+## End-to-end and real-Supabase checks (Phase 7)
+
+These run against the Supabase project in `.env.local`, which must be the **dev** project, and need `SUPABASE_SECRET_KEY` there. They create temporary users named `ft-e2e-…@example.com` / `ft-iso-…@example.com`, and delete them afterwards (every record they made goes with them). A run that is interrupted leaves its users behind; the next run deletes them first. Set `PRODUCTION_SUPABASE_URL` in `.env.local` once the production project exists: the suite refuses to run against it.
+
+First time only: `npx playwright install chromium`.
+
+| Project                     | Covers                                                                                                                                                                        |
+| --------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `isolation`                 | User B can't read, change, delete or reach through RPCs anything of user A's, in every table; anonymous calls are refused; sign-up is off; MFA gate                           |
+| `public`                    | Security headers and no-store on the production build; private pages and exports redirect to sign-in; PWA files                                                               |
+| `desktop`                   | The release journey: accounts, income, expense, transfer, budget, asset buy/valuation/sell, oversell refused, net worth to the rupee, CSV export, backup, CSV import and undo |
+| `mobile`, `desktop-screens` | Every main screen on a Pixel 7 and a desktop: renders, no console errors, no sideways scroll; screenshots in `test-results/e2e`                                               |
 
 ## How the database tests mimic Supabase
 

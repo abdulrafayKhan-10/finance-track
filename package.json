@@ -16,7 +16,9 @@
     "db:local:start": "scripts/local-postgres.sh start",
     "db:local:stop": "scripts/local-postgres.sh stop",
     "check": "pnpm format:check && pnpm lint && pnpm typecheck && pnpm test && pnpm build && pnpm check:bundle",
-    "check:bundle": "node scripts/check-client-bundle.mjs"
+    "check:bundle": "node scripts/check-client-bundle.mjs",
+    "test:e2e": "next build && playwright test",
+    "test:isolation": "playwright test --project=isolation"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.7",
@@ -36,6 +38,8 @@
     "zod": "^4.6.7"
   },
   "devDependencies": {
+    "@next/env": "16.4.2",
+    "@playwright/test": "1.52.0",
     "@tailwindcss/turbopack": "^4",
     "@testing-library/dom": "^10.4.2",
     "@testing-library/jest-dom": "^7.0.1",

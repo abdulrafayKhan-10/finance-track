@@ -115,11 +115,13 @@ Legend: `[x]` done and verified, `[ ]` not started, `[~]` in progress.
 - Restore keeps every id, so a backup can't be restored into a second account of the same database while the original records still exist (refused with a clear message).
 - Server-action bodies may be up to 11 MB (for backup restores; the app caps files at 10 MB).
 
-## Phase 7: Security and release verification
+## Phase 7: Security and release verification — in progress (2026-11-12)
 
-- [ ] Full checklist in `05-security.md`
-- [ ] Two-user isolation run against a real Supabase project
-- [ ] E2E suite desktop and mobile viewports
+- [~] Full checklist in `05-security.md`: all items verified except public sign-up, which is still ON in the dev project (needs you; production in Phase 8)
+- [~] Two-user isolation run against the real dev project (`pnpm test:isolation`): passed for every table from migrations 0001–0009, anonymous access refused, MFA gate verified with a real TOTP factor. The investment and import tables follow once 0010–0012 are applied there
+- [~] E2E suite (Playwright, production build, desktop + Pixel 7): written (`e2e/`); the security-header and public checks pass; the signed-in journey and screen checks run once 0010–0012 are applied to the dev project
+- [x] Found and fixed: Supabase Auth could not delete a user who had transactions (migration 0012, `tests/db/auth-deletion.test.ts`); "Delete my account" would have failed
+- [ ] **Needs you:** apply `finance-track-migrations-0010-0012.sql`, turn public sign-up off, then I run `pnpm test:e2e` and review the screenshots
 
 ## Phase 8: Free deployment
 

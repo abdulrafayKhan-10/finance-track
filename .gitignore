@@ -7,6 +7,11 @@ test-results/
 .env*
 !.env.example
 *.backup.json
+# Files the app downloads (backups and CSV exports contain financial data).
+finance-track-backup-*.json
+finance-track-*.csv
+# Playwright: the temporary E2E login and its session.
+e2e/.auth/
 *.dump
 *.sql.gz
 .vercel/
