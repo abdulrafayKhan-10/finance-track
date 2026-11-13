@@ -25,6 +25,18 @@ export default defineConfig({
     screenshot: "only-on-failure",
   },
   projects: [
+    // The full functional audit deletes its own account at the end, so it only runs when asked for:
+    //   AUDIT=1 npx playwright test --project=audit
+    ...(process.env.AUDIT === "1"
+      ? [
+          {
+            name: "audit",
+            testMatch: /audit\.spec\.ts/,
+            timeout: 180_000,
+            use: { ...devices["Desktop Chrome"], storageState: "e2e/.auth/state.json" },
+          },
+        ]
+      : []),
     { name: "isolation", testMatch: /(isolation|auth-settings)\.spec\.ts/ },
     { name: "public", testMatch: /public\.spec\.ts/, use: { ...devices["Desktop Chrome"] } },
     {

@@ -66,5 +66,8 @@ export async function deleteLeftoverTestUsers(): Promise<string[]> {
 
 export async function deleteTestUser(id: string): Promise<void> {
   const { error } = await adminClient().auth.admin.deleteUser(id);
-  if (error) throw new Error(`Could not delete test user ${id}: ${error.message}`);
+  // Already gone (e.g. a test deleted its own account through the app): nothing to clean up.
+  if (error && error.status !== 404 && !/not.?found/i.test(error.message)) {
+    throw new Error(`Could not delete test user ${id}: ${error.message}`);
+  }
 }

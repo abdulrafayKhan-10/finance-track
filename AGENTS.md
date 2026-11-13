@@ -51,6 +51,7 @@ ESLint enforces the arrows that matter (`eslint.config.mjs`): the domain can't i
 - Cross-row references use composite FKs `(id, user_id)` so another user's row can't be referenced even if RLS were bypassed.
 - Multi-row writes go through one RPC (atomic). Functions are `security invoker` with `set search_path = ''`, errors use the `FT0xx` codes mapped in `src/lib/errors.ts`.
 - Trigger functions that must also run when Supabase Auth deletes a user (the cascade runs as `supabase_auth_admin`, which has no rights here) must be `security definer` (see migration 0012).
+- Supabase loads `pg_safeupdate` on API connections: every `DELETE`/`UPDATE` inside a function needs a `WHERE` (use `where user_id = auth.uid()`). Local Postgres does not enforce it, so `tests/db/schema-security.test.ts` checks function bodies for you.
 - PostgREST returns at most 1,000 rows: any list that grows with history must use `fetchAll` (`src/data/supabase/paging.ts`) with a deterministic order ending in a unique key.
 - After a schema change, update `src/data/supabase/database.types.ts` by hand (it is hand-maintained).
 

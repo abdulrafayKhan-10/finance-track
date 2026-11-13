@@ -11,6 +11,8 @@ export const NOTICES = {
   asset_saved: "Asset saved.",
   asset_deleted: "Asset deleted.",
   import_undone: "Import undone: its transactions were removed.",
+  category_deleted: "Category deleted.",
+  category_merged: "Categories merged. Its transactions now use the other category.",
 } as const;
 
 export type NoticeKey = keyof typeof NOTICES;

@@ -197,6 +197,8 @@ Migrations live in `supabase/migrations/` (timestamp-prefixed filenames, numbere
 9. `0009_net_worth_snapshots.sql` (built): immutable snapshots and `ledger_lines`.
 10. `0010_investments.sql` (built): assets, valuations, holding movements, position invariant, investment RPC branches.
 11. `0011_imports_backup.sql` (built): import batches, restore, delete-my-data.
+12. `0012_deletion_guards.sql` (built): integrity triggers run as owner so Supabase Auth can delete a user.
+13. `0013_delete_my_data_where.sql` (built): `delete_my_data` names the caller’s rows in every statement (Supabase refuses DELETE without WHERE).
 
 Every migration ships with SQL tests (RLS and invariants) in the same PR. Types are regenerated after each schema change.
 

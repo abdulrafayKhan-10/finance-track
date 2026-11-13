@@ -1,9 +1,11 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { deleteCategoryRow, insertCategory, mergeCategories, updateCategoryRow } from "@/data/repositories/categories";
 import { requireUser } from "@/lib/auth";
 import { parseCategoryUpdate, parseNewCategory } from "@/lib/validation/categories";
+import { withNotice } from "@/lib/notice";
 import { uuid } from "@/lib/validation/form";
 import { type ActionState, failure } from "../action-state";
 
@@ -50,7 +52,8 @@ export async function deleteCategory(_prev: ActionState, formData: FormData): Pr
     });
   }
   revalidatePath("/settings/categories");
-  return { success: "Category deleted." };
+  // The category page no longer exists: go back to the list and say what happened.
+  redirect(withNotice("/settings/categories", "category_deleted"));
 }
 
 export async function mergeCategory(_prev: ActionState, formData: FormData): Promise<ActionState> {
@@ -69,5 +72,5 @@ export async function mergeCategory(_prev: ActionState, formData: FormData): Pro
   }
   revalidatePath("/settings/categories");
   revalidatePath("/transactions");
-  return { success: "Merged. Its transactions now use the other category." };
+  redirect(withNotice("/settings/categories", "category_merged"));
 }

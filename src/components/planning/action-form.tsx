@@ -1,13 +1,16 @@
 "use client";
 
-import { useActionState } from "react";
+import { useEffect, useRef } from "react";
 import { FormMessage } from "@/components/forms/form-message";
 import { SubmitButton } from "@/components/forms/submit-button";
+import { useActionForm } from "@/components/forms/use-action-form";
 import type { ActionState } from "@/features/action-state";
 
 /**
  * A small inline form around a server action: hidden fields, optional
  * inputs as children, one submit button, and its outcome message.
+ * What the person typed survives an error; the inputs clear only after a
+ * successful save, so the next entry starts fresh.
  */
 export function ActionForm({
   action,
@@ -26,9 +29,13 @@ export function ActionForm({
   className?: string;
   children?: React.ReactNode;
 }) {
-  const [state, formAction, pending] = useActionState(action, {});
+  const [state, onSubmit, pending] = useActionForm(action, {});
+  const form = useRef<HTMLFormElement>(null);
+  useEffect(() => {
+    if (state.success) form.current?.reset();
+  }, [state]);
   return (
-    <form action={formAction} className={className ?? "grid gap-3"} noValidate>
+    <form ref={form} onSubmit={onSubmit} className={className ?? "grid gap-3"} noValidate>
       {Object.entries(fields).map(([name, value]) => (
         <input key={name} type="hidden" name={name} value={value} />
       ))}

@@ -45,6 +45,23 @@ describe("schema security", () => {
     expect(rows).toEqual([]);
   });
 
+  it("has no DELETE or UPDATE without a WHERE clause in any function (Supabase's pg_safeupdate refuses them)", async () => {
+    const { rows } = await asAdmin((q) =>
+      q(`select p.proname, p.prosrc from pg_proc p join pg_namespace n on n.oid = p.pronamespace
+         where n.nspname in ('public', 'app_private') and p.prokind = 'f'`),
+    );
+    const offenders: string[] = [];
+    for (const { proname, prosrc } of rows as { proname: string; prosrc: string }[]) {
+      // Each DELETE/UPDATE statement, up to its terminating semicolon, must contain WHERE.
+      for (const m of prosrc.matchAll(/\b(delete\s+from|update)\s+[a-z_.]+[^;]*;/gi)) {
+        if (!/\bwhere\b/i.test(m[0]) && !/^update\s+[a-z_.]+\s*$/i.test(m[0])) {
+          offenders.push(`${proname}: ${m[0].replace(/\s+/g, " ").slice(0, 80)}`);
+        }
+      }
+    }
+    expect(offenders).toEqual([]);
+  });
+
   it("rejects anonymous reads", async () => {
     await expect(asAnon((q) => q("select * from public.accounts"))).rejects.toThrow(/permission denied/);
     await expect(asAnon((q) => q("select * from public.currencies"))).rejects.toThrow(/permission denied/);

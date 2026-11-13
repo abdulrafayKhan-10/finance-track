@@ -16,7 +16,10 @@ export type ActionState = {
  */
 export function failure(error: unknown, overrides: Partial<Record<string, string>> = {}): ActionState {
   if (error instanceof DataError) {
-    return { error: userMessage({ code: error.code }, overrides), needsUnlock: error.code === "FT006" || undefined };
+    const message = userMessage({ code: error.code }, overrides);
+    // An error code the app doesn't recognise is a bug worth seeing in the server log (codes carry no user data).
+    if (message === GENERIC_ERROR) console.error("Unrecognised data error code:", error.code);
+    return { error: message, needsUnlock: error.code === "FT006" || undefined };
   }
   console.error("Unexpected action error:", error instanceof Error ? error.name : typeof error);
   return { error: GENERIC_ERROR };

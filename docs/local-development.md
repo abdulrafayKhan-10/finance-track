@@ -42,19 +42,20 @@ pnpm dev                            # http://localhost:3000
 
 ## Scripts
 
-| Command                             | What it does                                                                                                                                           |
-| ----------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `pnpm dev`                          | Development server                                                                                                                                     |
-| `pnpm build` / `pnpm start`         | Production build and server                                                                                                                            |
-| `pnpm lint`                         | ESLint, including the domain-isolation import rules                                                                                                    |
-| `pnpm typecheck`                    | Generates route types, then `tsc --noEmit` (strict)                                                                                                    |
-| `pnpm format` / `pnpm format:check` | Prettier                                                                                                                                               |
-| `pnpm test`                         | Unit and component tests (Vitest + React Testing Library)                                                                                              |
-| `pnpm test:db`                      | Creates a fresh database `finance_track_test`, applies a small Supabase stand-in plus all migrations, then runs the RLS, isolation and invariant tests |
-| `pnpm check:bundle`                 | After a build, fails if any privileged-key marker is in the browser bundle                                                                             |
-| `pnpm check`                        | All of the above except `test:db`                                                                                                                      |
-| `pnpm test:e2e`                     | Builds, starts the app on port 3100 and runs the Playwright suite against the **dev** Supabase project (see below)                                     |
-| `pnpm test:isolation`               | Only the real-Supabase security checks: two-user isolation, anonymous access, sign-up setting, MFA gate                                                |
+| Command                                       | What it does                                                                                                                                                       |
+| --------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `pnpm dev`                                    | Development server                                                                                                                                                 |
+| `pnpm build` / `pnpm start`                   | Production build and server                                                                                                                                        |
+| `pnpm lint`                                   | ESLint, including the domain-isolation import rules                                                                                                                |
+| `pnpm typecheck`                              | Generates route types, then `tsc --noEmit` (strict)                                                                                                                |
+| `pnpm format` / `pnpm format:check`           | Prettier                                                                                                                                                           |
+| `pnpm test`                                   | Unit and component tests (Vitest + React Testing Library)                                                                                                          |
+| `pnpm test:db`                                | Creates a fresh database `finance_track_test`, applies a small Supabase stand-in plus all migrations, then runs the RLS, isolation and invariant tests             |
+| `pnpm check:bundle`                           | After a build, fails if any privileged-key marker is in the browser bundle                                                                                         |
+| `pnpm check`                                  | All of the above except `test:db`                                                                                                                                  |
+| `pnpm test:e2e`                               | Builds, starts the app on port 3100 and runs the Playwright suite against the **dev** Supabase project (see below)                                                 |
+| `AUDIT=1 npx playwright test --project=audit` | Full functional audit with dummy data (every feature, 17 steps); deletes its own test account at the end. `AUDIT_SKIP_RESTORE=1` skips the delete-and-restore step |
+| `pnpm test:isolation`                         | Only the real-Supabase security checks: two-user isolation, anonymous access, sign-up setting, MFA gate                                                            |
 
 ## End-to-end and real-Supabase checks (Phase 7)
 

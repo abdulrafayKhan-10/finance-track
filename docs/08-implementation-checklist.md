@@ -124,6 +124,16 @@ Legend: `[x]` done and verified, `[ ]` not started, `[~]` in progress.
 - [x] Found and fixed: a trend chart with a single month drew nothing (now shows the point); undoing an import gave no visible confirmation (now a notice)
 - [x] Visual review of the phone and desktop screenshots
 
+## Functional audit (2026-11-14)
+
+A browser audit (`e2e/audit.spec.ts`) exercised every feature with dummy data as a temporary user on the dev project, then deleted that account through the app. 16 of 17 steps pass; the delete-all-data-and-restore step waits for migration 0013 on the dev project.
+
+- Fixed: merging or deleting a category left the user on "Page not found" (now returns to the list with a notice)
+- Fixed: inline forms (budgets, goal allocations, valuations, rates) wiped typed input on an error (now cleared only after a successful save)
+- Fixed: "Delete all my data" always failed on Supabase (`pg_safeupdate`: DELETE without WHERE); migration 0013, plus a test that scans every function for bare DELETE/UPDATE
+- Unrecognised database error codes are now logged by code (no user data) so failures can be diagnosed
+- [ ] **Needs you:** apply `finance-track-migration-0013.sql`, then `AUDIT=1 npx playwright test --project=audit` runs all 17 steps
+
 ## Phase 8: Free deployment
 
 - [ ] Supabase production project, migrations pushed, auth URLs, sign-ups disabled after owner registration

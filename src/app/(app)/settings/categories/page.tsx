@@ -1,3 +1,4 @@
+import { Notice } from "@/components/app-shell/notice";
 import { ChevronRight } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
@@ -35,13 +36,15 @@ function Row({
   );
 }
 
-export default async function CategoriesPage() {
+export default async function CategoriesPage({ searchParams }: PageProps<"/settings/categories">) {
+  const query = await searchParams;
   await requireUser();
   const tree = await getCategoryTree();
   const parents = [...tree.expense, ...tree.income].map((c) => ({ id: c.id, name: c.name, kind: c.kind }));
 
   return (
     <>
+      <Notice value={query.notice} />
       <PageHeader
         title="Categories"
         description="Used for income and spending reports and budgets. Transfers and adjustments have no category."
